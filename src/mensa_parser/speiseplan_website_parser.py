@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import urllib.request
 from enum import Enum
 import re
+import pdf_parser
 
 
 class UniversityMensa(Enum):
@@ -31,6 +32,35 @@ class UniversityMensa(Enum):
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
+def get_speiseplan() -> []:
+
+    def ulm_filter(url):
+        if url["mensa"] == UniversityMensa.UL_UNI_Sued:
+            return True
+        # if url["mensa"] == UniversityMensa.UL_UNI_West:
+        #     return True
+        return False
+
+    plans = get_links()
+    plans = list(filter(ulm_filter, plans))
+    for link in plans:
+        mp = pdf_parser.MensaParser()
+        try:
+            link["parsed"] = mp.parse_plan_from_url(link["url"])
+        except Exception as e:
+            print(f"Exception occurred with {link['url']}: {e}")
+
+    return plans
+
+def fs_et_adapter(plans: []) -> dict:
+    result = {"weeks": []}
+
+    for p in plans:
+
+
+
+        pass
+
 def get_speiseplan_website() -> str:
     """
     Loads the
@@ -53,7 +83,7 @@ def get_links() -> []:
         try:
             plans.append(parse_href(a["href"]))
         except NotImplementedError as e:
-            pass
+            break
         except Exception as e:
             pass
 

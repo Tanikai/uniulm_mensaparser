@@ -1,7 +1,9 @@
-import speiseplan_website_parser
 import re
+import urllib.request
 from enum import Enum
 import fitz
+import requests
+from datetime import timedelta, datetime
 
 roles = ('student', 'employee', 'other')
 weekdays = ('Monday', 'Tuesday', 'Wednesday',
@@ -38,34 +40,6 @@ legend = {
     '35': "Fisch"
 }
 
-
-def parse_all():
-    urls = speiseplan_website_parser.get_links()
-    parse_pdf(urls[0])
-
-
-def parse_pdf(pdf_url: str):
-    document = fitz.open(pdf_url)
-    text = document[0].get_text()
-    parser = MensaParser()
-    parser.parse_plan(text)
-    # for page in document:
-    #     text = page.get_text()
-    #     with open("out.txt", "wb") as f:
-    #         f.write(text)
-    # pass
-    # with open(pdf_url) as pdf_file:
-    #    parse_pdf_file(pdf_file)
-
-
-def parse_pdf_file(pdf_file):
-    pass
-
-
-def parse_text(text: [str]):
-    for l in text:
-        print(l)
-    pass
 
 
 class Weekday(Enum):
@@ -143,6 +117,12 @@ class MensaParser():
         self.meal_lines = []
         pass
 
+    def parse_plan_from_url(self, pdf_url: str):
+        with requests.get(pdf_url) as data:
+            document = fitz.open("pdf", data.content)
+            text = document[0].get_text()
+            return self.parse_plan(text)
+
     def parse_plan(self, plan_source: str):
         lines = re.split("\n+", plan_source)
 
@@ -150,8 +130,14 @@ class MensaParser():
         # have the date as it is contained in the pdf URL. This means that we
         # can skip until the "Fleisch und Fisch" category starts.
         meal_reached = False
+        date_found = False
         while not meal_reached:
             l = self._clean_line(lines.pop(0))  # remove first item of list
+
+            if not date_found and ("." in l): # date found
+                self._parse_week(l)
+                date_found = True  # prevent multiple date parsing
+
             if MealCategory.is_meal_category(l):
                 meal_reached = True
                 self.current_category = MealCategory.from_str(l)
@@ -191,6 +177,24 @@ class MensaParser():
         # else: it is part of the meal name =)
         self.meal_lines.append(line)
 
+    def _parse_week(self, line: str):
+        l = line.strip()
+        dates = l.split(" ") # not - because a weird form is used in the pdf
+        from_date = datetime.strptime(dates[0], "%d.%m.")
+        until_date = datetime.strptime(dates[2], "%d.%m.%Y")
+
+        if until_date.month < from_date.month:
+            from_date = from_date.replace(year=until_date.year-1) # new year
+        else:
+            from_date = from_date.replace(year=until_date.year)
+
+        for i in range(5):
+            self.plan["weekdays"][Weekday.name_from_value(self.meal_weekday_counter)]["date"] = from_date.strftime("%Y-%m-%d")
+            self.meal_weekday_counter += 1
+            from_date = from_date + timedelta(days=1)
+
+        self.meal_weekday_counter = 1
+
     def _get_current_meal(self) -> dict:
         """
         Returns a reference to the current meal.
@@ -211,8 +215,8 @@ class MensaParser():
             meal_name += self.meal_lines[i] + " "
 
         meal_name = self._remove_allergens(meal_name)
-        meal_name = re.sub("\s+", " ",
-                           meal_name)  # remove duplicate whitespaces
+        # remove duplicate whitespaces
+        meal_name = re.sub("\s+", " ", meal_name)
         # if the next word begins with an uppercase letter, the - is part of
         # the word and should be kept
         meal_name = re.sub("- ([A-Z])", "-\g<1>", meal_name)

@@ -28,3 +28,6 @@ class Test(TestCase):
         #self.assertEqual(expected["university_id"], given["university_id"])
         #self.assertEqual(expected["mensa_name"], given["mensa_name"])
         self.assertEqual(expected["week"], given["week"])
+    def test_get_meal_plans(self):
+        plans = speiseplan_website_parser.get_speiseplan()
+        self.fail()

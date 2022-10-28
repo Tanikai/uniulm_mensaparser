@@ -1,3 +1,2 @@
 beautifulsoup4
-pdfminer.six
-camelot-py[cv]
+pymupdf

@@ -41,13 +41,12 @@ legend = {
 }
 
 
-
 class Weekday(Enum):
-    MONDAY = 1,
-    TUESDAY = 2,
-    WEDNESDAY = 3,
-    THURSDAY = 4,
-    FRIDAY = 5,
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
 
     @staticmethod
     def name_from_value(val: int) -> str:
@@ -69,11 +68,12 @@ class Weekday(Enum):
 
 
 class MealCategory(Enum):
-    NONE = 0,
-    FLEISCH_UND_FISCH = 1,
-    PRIMA_KLIMA = 2,
-    SATTMACHER = 3,
+    NONE = 0
+    FLEISCH_UND_FISCH = 1
+    PRIMA_KLIMA = 2
+    SATTMACHER = 3
     TOPF_UND_PFANNE = 4
+    EXTRA = 5
 
     @staticmethod
     def from_str(label: str):
@@ -86,8 +86,26 @@ class MealCategory(Enum):
             return MealCategory.SATTMACHER
         elif "topf und pfanne" in l:
             return MealCategory.TOPF_UND_PFANNE
+        elif "extra" in l:
+            return MealCategory.EXTRA
         else:
             raise ValueError(f"parse error with input {label}")
+
+    @staticmethod
+    def pretty_print(value: str):
+        l = value.upper().strip()
+        if "FLEISCH_UND_FISCH" in l:
+            return "Fleisch und Fisch"
+        elif "PRIMA_KLIMA" in l:
+            return "Prima Klima"
+        elif "SATTMACHER" in l:
+            return "Sattmacher"
+        elif "TOPF_UND_PFANNE" in l:
+            return "Topf und Pfanne"
+        elif "EXTRA" in l:
+            return "Extra"
+        else:
+            return ""
 
     @staticmethod
     def is_meal_category(line: str) -> bool:
@@ -101,27 +119,58 @@ class MealCategory(Enum):
 class MensaParser():
 
     def __init__(self):
+        # @TODO SKIP EMPTY DAYS
         self.plan = {"weekdays": {}}
         for w in Weekday:
             weekdayname = w.name.lower()
-            self.plan["weekdays"][weekdayname] = {}  # add weekdays to plan
+            self.plan["weekdays"][weekdayname] = {"date": "",
+                                                  "meals": {}}  # add weekdays to plan
 
             for cat in MealCategory:  # add meal categories to weekdays
                 if cat is MealCategory.NONE:
                     continue
                 categoryname = cat.name.lower()
-                self.plan["weekdays"][weekdayname][categoryname] = {}
+                self.plan["weekdays"][weekdayname]["meals"][categoryname] = {}
 
         self.current_category = MealCategory.NONE  # MealCategory
         self.meal_weekday_counter = 1  # counts category of meal
         self.meal_lines = []
-        pass
+
+        # used to check whether mensa is open at a specific weekday
+        self.is_open = {}
+        for w in Weekday:
+            self.is_open[w] = True
+
 
     def parse_plan_from_url(self, pdf_url: str):
         with requests.get(pdf_url) as data:
             document = fitz.open("pdf", data.content)
             text = document[0].get_text()
+            with open("test.txt", "w") as f:
+                f.write(text)
+
+            self.init_mensa_opened(document[0])
             return self.parse_plan(text)
+
+    def init_mensa_opened(self, page: fitz.Page):
+        col_h = 360
+        col_w = 140
+        col_top = 95
+        col_bot = col_top + col_h
+
+        rects = {
+            Weekday.MONDAY: fitz.Rect(140, col_top, 140 + col_w, col_bot),
+            Weekday.TUESDAY: fitz.Rect(280, col_top, 280 + col_w, col_bot),
+            Weekday.WEDNESDAY: fitz.Rect(420, col_top, 480 + col_w, col_bot),
+            Weekday.THURSDAY: fitz.Rect(560, col_top, 560 + col_w, col_bot),
+            Weekday.FRIDAY: fitz.Rect(695, col_top, 695 + col_w, col_bot),
+        }
+
+        # if empty column is found, mensa is closed for that day
+        for day in rects:
+            found_text = page.get_textbox(rects[day])
+            if len(found_text) < 100:
+                self.is_open[day] = False
 
     def parse_plan(self, plan_source: str):
         lines = re.split("\n+", plan_source)
@@ -134,7 +183,7 @@ class MensaParser():
         while not meal_reached:
             l = self._clean_line(lines.pop(0))  # remove first item of list
 
-            if not date_found and ("." in l): # date found
+            if not date_found and ("." in l):  # date found
                 self._parse_week(l)
                 date_found = True  # prevent multiple date parsing
 
@@ -156,7 +205,7 @@ class MensaParser():
         if MealCategory.is_meal_category(l):
             self.current_category = MealCategory.from_str(l)
             # if new weekday is found, go to monday again
-            self.meal_weekday_counter = 1
+            self._reset_weekday()
             return
 
         if self._is_co2(l):  # skip co2 lines for the time being
@@ -171,25 +220,45 @@ class MensaParser():
             prices = self._parse_prices(l)
             meal_dict["prices"] = prices
 
-            self.meal_weekday_counter += 1
+            self._next_weekday()
             return
 
         # else: it is part of the meal name =)
         self.meal_lines.append(line)
 
+    def _next_weekday(self):
+        # check whether mensa is opened on next day
+        opened = False
+        while not opened:
+            self.meal_weekday_counter += 1
+
+            if self.meal_weekday_counter > Weekday.FRIDAY.value: # 6 or larger
+                self.meal_weekday_counter = 1
+
+            opened = self.is_open[Weekday(self.meal_weekday_counter)]
+
+    def _reset_weekday(self):
+        self.meal_weekday_counter = 1
+        opened = self.is_open[Weekday(self.meal_weekday_counter)]
+        if not opened:
+            self._next_weekday()
+
+
     def _parse_week(self, line: str):
         l = line.strip()
-        dates = l.split(" ") # not - because a weird form is used in the pdf
+        dates = l.split(" ")  # not - because a weird form is used in the pdf
         from_date = datetime.strptime(dates[0], "%d.%m.")
         until_date = datetime.strptime(dates[2], "%d.%m.%Y")
 
         if until_date.month < from_date.month:
-            from_date = from_date.replace(year=until_date.year-1) # new year
+            from_date = from_date.replace(year=until_date.year - 1)  # new year
         else:
             from_date = from_date.replace(year=until_date.year)
 
         for i in range(5):
-            self.plan["weekdays"][Weekday.name_from_value(self.meal_weekday_counter)]["date"] = from_date.strftime("%Y-%m-%d")
+            self.plan["weekdays"][
+                Weekday.name_from_value(self.meal_weekday_counter)][
+                "date"] = from_date.strftime("%Y-%m-%d")
             self.meal_weekday_counter += 1
             from_date = from_date + timedelta(days=1)
 
@@ -202,7 +271,7 @@ class MensaParser():
         """
         weekday = Weekday.name_from_value(self.meal_weekday_counter)
         category = self.current_category.name.lower()
-        return self.plan["weekdays"][weekday][category]
+        return self.plan["weekdays"][weekday]["meals"][category]
 
     def _clean_line(self, line: str) -> str:
         l = line.strip()  # strip whitespace
@@ -223,9 +292,9 @@ class MensaParser():
         # if the next word begins with a lowercase letter, the - is used for
         # hyphenation and thus should be removed
         meal_name = re.sub("- ([a-z])", "\g<1>", meal_name)
-        meal_name = re.sub(" ,", ",", meal_name) # remove space before comma
-        meal_name = re.sub(",[^ ]", ",", meal_name) # add space after comma
-        meal_name = meal_name.strip() # strip remaining whitespace
+        meal_name = re.sub(" ,", ",", meal_name)  # remove space before comma
+        meal_name = re.sub(",[^ ]", ",", meal_name)  # add space after comma
+        meal_name = meal_name.strip()  # strip remaining whitespace
         return meal_name
 
     def _remove_allergens(self, line: str) -> str:

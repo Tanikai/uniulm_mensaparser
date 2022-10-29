@@ -1,8 +1,11 @@
+import sys
+
 from bs4 import BeautifulSoup
 import urllib.request
 from enum import Enum
 import re
-import pdf_parser
+from . import pdf_parser
+from json import dumps
 
 
 class UniversityMensa(Enum):
@@ -33,7 +36,6 @@ BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
 def get_speiseplan() -> []:
-
     def ulm_filter(url):
         if url["mensa"] == UniversityMensa.UL_UNI_Sued:
             return True
@@ -44,22 +46,60 @@ def get_speiseplan() -> []:
     plans = get_links()
     plans = list(filter(ulm_filter, plans))
     for link in plans:
-        mp = pdf_parser.MensaParser()
-        try:
-            link["parsed"] = mp.parse_plan_from_url(link["url"])
-        except Exception as e:
-            print(f"Exception occurred with {link['url']}: {e}")
+        link["parsed"] = parse_speiseplan(link["url"])
 
     return plans
+
+
+def parse_speiseplan(url: str) -> dict:
+    mp = pdf_parser.MensaParser()
+    try:
+        return mp.parse_plan_from_url(url)
+    except Exception as e:
+        print(f"Exception occurred with {url}: {e}")
+
 
 def fs_et_adapter(plans: []) -> dict:
     result = {"weeks": []}
 
     for p in plans:
-
-
-
         pass
+
+
+def simple_adapter(plans: []) -> dict:
+    result = {}
+
+    for p in plans:
+        mensa_name = p["mensa"].name.lower()
+        if mensa_name not in result:
+            result[mensa_name] = {}
+        mensa_dict = result[mensa_name]
+        for day in p["parsed"]["weekdays"]:
+            day_dict = p["parsed"]["weekdays"][day]
+            date = day_dict["date"]
+
+            if date not in mensa_dict:
+                mensa_dict[date] = []
+
+            meals = day_dict["meals"]
+            for meal_category in day_dict["meals"]:
+                if meal_category == "extra":
+                    continue  # skip extra category for the time being
+
+                current_meal = meals[meal_category]
+                if (not "name" in current_meal) or \
+                        (not "prices" in current_meal):
+                    continue
+                out = {
+                    "name": current_meal["name"],
+                    "category": pdf_parser.MealCategory.pretty_print(
+                        meal_category),
+                    "prices": dict(current_meal["prices"]),
+                }
+                mensa_dict[date].append(out)
+
+    return result
+
 
 def get_speiseplan_website() -> str:
     """
@@ -100,3 +140,15 @@ def parse_href(href: str) -> dict:
     plan["week"] = file_attrs.pop()  # week in format KW**
     plan["mensa"] = UniversityMensa.from_str(" ".join(file_attrs))
     return plan
+
+
+if __name__ == "__main__":
+    plans = get_speiseplan()
+    formatted = fs_et_adapter(plans)
+
+    if len(sys.argv) >= 2:
+        with open(sys.argv[1], "w") as f:
+            f.write(dumps(formatted))
+    else:  # no argument
+        with open("./out/mensaplan.json", "w") as f:
+            f.write(dumps(formatted))

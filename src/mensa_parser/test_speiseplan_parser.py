@@ -30,4 +30,9 @@ class Test(TestCase):
         self.assertEqual(expected["week"], given["week"])
     def test_get_meal_plans(self):
         plans = speiseplan_website_parser.get_speiseplan()
+        speiseplan_website_parser.simple_adapter(plans)
         self.fail()
+
+    def test_parse_empty(self):
+        text = speiseplan_website_parser.parse_speiseplan("https://studierendenwerk-ulm.de/wp-content/uploads/speiseplaene/UL%20UNI%20Mensa%20S%C3%BCd%20KW44%20W3.pdf")
+        print(text)

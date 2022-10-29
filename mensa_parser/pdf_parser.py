@@ -146,9 +146,6 @@ class MensaParser():
         with requests.get(pdf_url) as data:
             document = fitz.open("pdf", data.content)
             text = document[0].get_text()
-            with open("test.txt", "w") as f:
-                f.write(text)
-
             self.init_mensa_opened(document[0])
             return self.parse_plan(text)
 

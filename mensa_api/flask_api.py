@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from src.mensa_parser.speiseplan_website_parser import get_speiseplan, \
+from mensa_parser.speiseplan_website_parser import get_speiseplan, \
     simple_adapter
 from cachetools import cached, TTLCache
 
@@ -22,6 +22,10 @@ def return_mensaplan(mensa_id, date):
         return jsonify(day_plan)
     except KeyError:
         return f"Could not find plan for {mensa_id} on date {date}", 404
+
+
+def run():
+    appFlask.run()
 
 
 if __name__ == "__main__":

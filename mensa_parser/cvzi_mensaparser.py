@@ -13,7 +13,8 @@ try:
     from util import StyledLazyBuilder, nowBerlin, weekdays_map
 except ModuleNotFoundError:
     import sys
-    include = os.path.relpath(os.path.join(os.path.dirname(__file__), '..'))
+    include = os.path.relpath(os.path.join(os.path.dirname(__file__),
+                                           '../src'))
     sys.path.insert(0, include)
     from version import __version__, useragentname, useragentcomment
     from util import StyledLazyBuilder, nowBerlin, weekdays_map

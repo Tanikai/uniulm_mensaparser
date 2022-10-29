@@ -14,7 +14,7 @@ def get_cached_plan():
     return formatted
 
 
-@appFlask.route("/canteens/<mensa_id>/days/<date>/meals")
+@appFlask.route("/api/v1/canteens/<mensa_id>/days/<date>/meals")
 def return_mensaplan(mensa_id, date):
     formatted = get_cached_plan()
     try:

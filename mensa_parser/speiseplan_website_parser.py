@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import urllib.request
 from enum import Enum
 import re
-from . import pdf_parser
+from mensa_parser import pdf_parser
 from json import dumps
 
 
@@ -46,17 +46,22 @@ def get_speiseplan() -> []:
     plans = get_links()
     plans = list(filter(ulm_filter, plans))
     for link in plans:
-        link["parsed"] = parse_speiseplan(link["url"])
+        link["parsed"] = parse_speiseplan_url(link["url"])
 
     return plans
 
 
-def parse_speiseplan(url: str) -> dict:
+def parse_speiseplan_url(url: str) -> dict:
     mp = pdf_parser.MensaParser()
     try:
         return mp.parse_plan_from_url(url)
     except Exception as e:
         print(f"Exception occurred with {url}: {e}")
+
+
+def parse_speiseplan_file(path: str) -> dict:
+    mp = pdf_parser.MensaParser()
+    return mp.parse_plan_from_file(path)
 
 
 def fs_et_adapter(plans: []) -> dict:
@@ -83,9 +88,6 @@ def simple_adapter(plans: []) -> dict:
 
             meals = day_dict["meals"]
             for meal_category in day_dict["meals"]:
-                if meal_category == "extra":
-                    continue  # skip extra category for the time being
-
                 current_meal = meals[meal_category]
                 if (not "name" in current_meal) or \
                         (not "prices" in current_meal):

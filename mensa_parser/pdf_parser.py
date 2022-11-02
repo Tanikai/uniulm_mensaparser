@@ -134,6 +134,7 @@ class MensaParser():
 
         self.current_category = MealCategory.NONE  # MealCategory
         self.meal_weekday_counter = 1  # counts category of meal
+        self.meal_category_counter = 1
         self.meal_lines = []
 
         # used to check whether mensa is open at a specific weekday
@@ -149,25 +150,34 @@ class MensaParser():
             self.init_mensa_opened(document[0])
             return self.parse_plan(text)
 
+    def parse_plan_from_file(self, path: str):
+        document = fitz.open(filename=path, filetype="pdf")
+        text = document[0].get_text()
+        self.init_mensa_opened(document[0])
+        return self.parse_plan(text)
+
     def init_mensa_opened(self, page: fitz.Page):
         col_h = 360
         col_w = 140
-        col_top = 95
+        col_top = 70
         col_bot = col_top + col_h
 
         rects = {
             Weekday.MONDAY: fitz.Rect(140, col_top, 140 + col_w, col_bot),
             Weekday.TUESDAY: fitz.Rect(280, col_top, 280 + col_w, col_bot),
-            Weekday.WEDNESDAY: fitz.Rect(420, col_top, 480 + col_w, col_bot),
+            Weekday.WEDNESDAY: fitz.Rect(420, col_top, 420 + col_w, col_bot),
             Weekday.THURSDAY: fitz.Rect(560, col_top, 560 + col_w, col_bot),
             Weekday.FRIDAY: fitz.Rect(695, col_top, 695 + col_w, col_bot),
         }
 
         # if empty column is found, mensa is closed for that day
         for day in rects:
-            found_text = page.get_textbox(rects[day])
+            found_text = page.get_text("text", clip=rects[day])
+            #found_text = page.get_textbox(rects[day])
             if len(found_text) < 100:
                 self.is_open[day] = False
+            else:
+                self.plan["weekdays"][day.name.lower()]["text"] = found_text
 
     def parse_plan(self, plan_source: str):
         lines = re.split("\n+", plan_source)
@@ -188,13 +198,60 @@ class MensaParser():
                 meal_reached = True
                 self.current_category = MealCategory.from_str(l)
 
-        # here, we begin with the first meal
-        for l in lines:
-            self._parse_line(l)
+
+        # parse weekdays
+        for day in Weekday:
+            self._parse_weekday(day)
 
         return self.plan
 
+    def _parse_weekday(self, weekday: Weekday):
+        if not self.is_open[weekday]:
+            return
+        col_text = self.plan["weekdays"][weekday.name.lower()]["text"]
+
+        lines = re.split("\n+", col_text)
+        for l in lines:
+            self._parse_column_line(l, weekday)
+
+        self.meal_lines = []  # clean up rest
+        self.meal_category_counter = 1
+
+    def _parse_column_line(self, line: str, weekday: Weekday):
+        """
+        Parses plan lines by column (i.e. by day)
+        :param line:
+        :return: Exit
+        """
+        l = self._clean_line(line)
+
+        if len(l) == 0:
+            return  # skip line if it i
+
+        if self._is_co2(l):
+            return
+
+        if self._is_prices(l):
+            category = MealCategory(self.meal_category_counter).name.lower()
+            meal_dict = self.plan["weekdays"][weekday.name.lower()]["meals"][category]
+            meal_dict["name"] = self._build_meal_name()
+            self.meal_lines = []
+
+            prices = self._parse_prices(l)
+            meal_dict["prices"] = prices
+
+            self.meal_category_counter += 1
+            return
+
+        self.meal_lines.append(l)
+
+
     def _parse_line(self, line: str):
+        """
+        Parses plan lines horizontally.
+        :param line:
+        :return:
+        """
         l = self._clean_line(line)
         if len(l) == 0:
             return  # skip line if it i
@@ -216,12 +273,10 @@ class MensaParser():
 
             prices = self._parse_prices(l)
             meal_dict["prices"] = prices
-
-            self._next_weekday()
             return
 
         # else: it is part of the meal name =)
-        self.meal_lines.append(line)
+        self.meal_lines.append(l)
 
     def _next_weekday(self):
         # check whether mensa is opened on next day

@@ -25,14 +25,22 @@ class Test(TestCase):
         }
         self.assertEqual(expected["url"], given["url"])
         self.assertEqual(expected["mensa"], given["mensa"])
-        #self.assertEqual(expected["university_id"], given["university_id"])
-        #self.assertEqual(expected["mensa_name"], given["mensa_name"])
+        # self.assertEqual(expected["university_id"], given["university_id"])
+        # self.assertEqual(expected["mensa_name"], given["mensa_name"])
         self.assertEqual(expected["week"], given["week"])
+
     def test_get_meal_plans(self):
         plans = speiseplan_website_parser.get_speiseplan()
         speiseplan_website_parser.simple_adapter(plans)
         self.fail()
 
     def test_parse_empty(self):
-        text = speiseplan_website_parser.parse_speiseplan("https://studierendenwerk-ulm.de/wp-content/uploads/speiseplaene/UL%20UNI%20Mensa%20S%C3%BCd%20KW44%20W3.pdf")
-        print(text)
+        text = speiseplan_website_parser.parse_speiseplan_file(
+            "../tests/resources/UL UNI Mensa Süd KW44 W3.pdf")
+
+        mon = text["weekdays"]["monday"]
+        self.assertEqual(mon["date"], '2022-10-31')
+        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["name"], 'Cevapcici mit Ajvar Djuvetschreis')
+        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["prices"], {'students': '4,30 €', 'employees': '6,20 €', 'others': '8,20 €'})
+        self.assertEqual(mon["meals"]["prima_klima"]["name"], "Farfalle-Spinat-Pfanne, Kirschtomaten in Käsesahne")
+

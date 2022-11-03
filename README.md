@@ -23,7 +23,7 @@ versions, but without guarantee.
 Firstly, clone this repository and install the required Python modules:
 
 ```sh
-git pull https://github.com/Tanikai/uniulm_mensaparser.git
+git clone https://github.com/Tanikai/uniulm_mensaparser.git
 cd uniulm_mensaparser
 pip install -r requirements.txt
 ```

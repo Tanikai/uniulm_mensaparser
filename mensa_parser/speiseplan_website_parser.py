@@ -1,14 +1,14 @@
-import sys
-
 from bs4 import BeautifulSoup
 import urllib.request
-from enum import Enum
 import re
-from mensa_parser import pdf_parser
-from json import dumps
+from enum import Enum
+
+"""
+This module is used to get the links to the PDF files.
+"""
 
 
-class UniversityMensa(Enum):
+class Canteens(Enum):
     UL_UNI_Sued = 1,
     UL_UNI_Nord = 2,
     UL_UNI_Helmholtz = 3,
@@ -21,13 +21,13 @@ class UniversityMensa(Enum):
     def from_str(label: str):
         l = label.lower().strip()  # all smallercase and trim whitespace
         if "ul uni mensa süd" in l:
-            return UniversityMensa.UL_UNI_Sued
+            return Canteens.UL_UNI_Sued
         elif "ul uni nord" in l:
-            return UniversityMensa.UL_UNI_Nord
+            return Canteens.UL_UNI_Nord
         elif "ul uni helmholtz" in l:
-            return UniversityMensa.UL_UNI_Helmholtz
+            return Canteens.UL_UNI_Helmholtz
         elif "ul uni west" in l:
-            return UniversityMensa.UL_UNI_West
+            return Canteens.UL_UNI_West
         else:
             raise NotImplementedError
 
@@ -37,70 +37,14 @@ BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 def get_speiseplan() -> []:
     def ulm_filter(url):
-        if url["mensa"] == UniversityMensa.UL_UNI_Sued:
+        if url["mensa"] == Canteens.UL_UNI_Sued:
             return True
-        # if url["mensa"] == UniversityMensa.UL_UNI_West:
-        #     return True
+        # TODO: add argument for different canteens
         return False
 
-    plans = get_links()
+    plans = get_pdf_links()
     plans = list(filter(ulm_filter, plans))
-    for link in plans:
-        link["parsed"] = parse_speiseplan_url(link["url"])
-
     return plans
-
-
-def parse_speiseplan_url(url: str) -> dict:
-    mp = pdf_parser.MensaParser()
-    try:
-        return mp.parse_plan_from_url(url)
-    except Exception as e:
-        print(f"Exception occurred with {url}: {e}")
-
-
-def parse_speiseplan_file(path: str) -> dict:
-    mp = pdf_parser.MensaParser()
-    return mp.parse_plan_from_file(path)
-
-
-def fs_et_adapter(plans: []) -> dict:
-    result = {"weeks": []}
-
-    for p in plans:
-        pass
-
-
-def simple_adapter(plans: []) -> dict:
-    result = {}
-
-    for p in plans:
-        mensa_name = p["mensa"].name.lower()
-        if mensa_name not in result:
-            result[mensa_name] = {}
-        mensa_dict = result[mensa_name]
-        for day in p["parsed"]["weekdays"]:
-            day_dict = p["parsed"]["weekdays"][day]
-            date = day_dict["date"]
-
-            if date not in mensa_dict:
-                mensa_dict[date] = []
-
-            meals = day_dict["meals"]
-            for meal_category in day_dict["meals"]:
-                current_meal = meals[meal_category]
-                if (not "name" in current_meal) or \
-                        (not "prices" in current_meal):
-                    continue
-                out = {
-                    "name": current_meal["name"],
-                    "category": pdf_parser.MealCategory.pretty_print(
-                        meal_category),
-                    "prices": dict(current_meal["prices"]),
-                }
-                mensa_dict[date].append(out)
-
-    return result
 
 
 def get_speiseplan_website() -> str:
@@ -114,7 +58,11 @@ def get_speiseplan_website() -> str:
     return speiseplan_source
 
 
-def get_links() -> []:
+def get_pdf_links() -> []:
+    """
+    Returns all PDF links of the Studierendenwerk Ulm website.
+    :return:
+    """
     source = get_speiseplan_website()
     soup = BeautifulSoup(source, "html.parser")
 
@@ -140,17 +88,5 @@ def parse_href(href: str) -> dict:
     file_attrs = re.split('\s+', filename)
     file_attrs.pop()  # monthly mensa plan
     plan["week"] = file_attrs.pop()  # week in format KW**
-    plan["mensa"] = UniversityMensa.from_str(" ".join(file_attrs))
+    plan["mensa"] = Canteens.from_str(" ".join(file_attrs))
     return plan
-
-
-if __name__ == "__main__":
-    plans = get_speiseplan()
-    formatted = fs_et_adapter(plans)
-
-    if len(sys.argv) >= 2:
-        with open(sys.argv[1], "w") as f:
-            f.write(dumps(formatted))
-    else:  # no argument
-        with open("./out/mensaplan.json", "w") as f:
-            f.write(dumps(formatted))

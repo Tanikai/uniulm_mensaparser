@@ -1,5 +1,4 @@
 import re
-import urllib.request
 from enum import Enum
 import fitz
 import requests

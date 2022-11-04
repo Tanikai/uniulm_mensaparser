@@ -6,12 +6,12 @@ Ulm University that are provided on the
 
 The parsed data can be accessed here:
 [uulm.anter.dev/api/v1/canteens/ul_uni_sued](https://uulm.anter.dev/api/v1/canteens/ul_uni_sued)
+The source code for the REST API can be found at [Tanikai/uniulm_mensa_api](https://github.com/Tanikai/uniulm_mensa_api).
 
 ## Getting Started
 
 These instructions will give you a copy of the project up and running on
-your local machine for development and testing purposes. See deployment
-for notes on deploying the project on a live system.
+your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -28,35 +28,12 @@ cd uniulm_mensaparser
 pip install -r requirements.txt
 ```
 
-After that, you can run the REST API with:
-
-```sh
-python run_api.py
-```
-
-## Deployment
-
-When you want to deploy the application, you will need a WSGI server. For
-example, you can use the [waitress](https://github.com/Pylons/waitress) module:
-
-```sh
-python -m waitress --port 8080 run_api:application
-```
-
-## API Documentation
-
-| Path                                                       | Description                                                                        |
-|------------------------------------------------------------|------------------------------------------------------------------------------------|
-| BASE_URL/api/v1/canteens/ul_uni_sued/                      | Get the next plan for the Mensa Süd (days where the canteen is closed are skipped) |
-| BASE_URL/api/v1/canteens/ul_uni_sued/days/YYYY-MM-DD/meals | Get the mensa plan for a specific day                                              |
-
 ## Built With
 
-  - [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) for 
-    extracting PDF links from the Studierendenwerk Ulm website
-  - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) for parsing the canteen plan
-    pdf files
-  - [flask](https://flask.palletsprojects.com/) for the REST API
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) for 
+  extracting PDF links from the Studierendenwerk Ulm website
+- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) for parsing the canteen plan
+  pdf files
 
 ## Todo
 
@@ -66,7 +43,7 @@ python -m waitress --port 8080 run_api:application
 
 ## Authors
 
- - **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Twitter](https://twitter.com/tanikai29)
+- **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Twitter](https://twitter.com/tanikai29)
 
 ## License
 

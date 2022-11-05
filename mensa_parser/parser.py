@@ -1,6 +1,6 @@
 from .adapter import SimpleAdapter
 from .pdf_parser import MensaParser
-from .speiseplan_website_parser import get_speiseplan
+from .speiseplan_website_parser import get_speiseplan, Canteens
 
 """
 Library API
@@ -8,7 +8,10 @@ Library API
 
 
 def get_current_plans(adapter_class=SimpleAdapter) -> dict:
-    plans = get_speiseplan()
+    return get_plans_for_canteens({Canteens.UL_UNI_Sued}, adapter_class)
+
+def get_plans_for_canteens(canteens: {Canteens}, adapter_class=SimpleAdapter) -> dict:
+    plans = get_speiseplan(canteens)
     try:
         for p in plans:
             p["parsed"] = parse_from_url(p["url"])

@@ -35,12 +35,9 @@ class Canteens(Enum):
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
-def get_speiseplan() -> []:
+def get_speiseplan(canteens: {Canteens}) -> []:
     def ulm_filter(url):
-        if url["mensa"] == Canteens.UL_UNI_Sued:
-            return True
-        # TODO: add argument for different canteens
-        return False
+        return url["mensa"] in canteens
 
     plans = get_pdf_links()
     plans = list(filter(ulm_filter, plans))
@@ -71,7 +68,7 @@ def get_pdf_links() -> []:
     plans = []
     for a in links:
         try:
-            plans.append(parse_href(a["href"]))
+            plans.append(parse_pdf_name(a["href"]))
         except NotImplementedError as e:
             break
         except Exception as e:
@@ -80,7 +77,7 @@ def get_pdf_links() -> []:
     return plans
 
 
-def parse_href(href: str) -> dict:
+def parse_pdf_name(href: str) -> dict:
     plan = {"url": href}
     split_list = href.split("/")
     filename = split_list.pop()  # get last element of list -> filename

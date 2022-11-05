@@ -5,4 +5,4 @@ class TestSpeiseplanWebsiteParser(TestCase):
 
     def test_parse_plan(self):
         test = parser.get_current_plans(adapter.SimpleAdapter)
-        pass
+        print(test)

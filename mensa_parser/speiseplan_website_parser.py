@@ -70,7 +70,7 @@ def get_pdf_links() -> []:
         try:
             plans.append(parse_pdf_name(a["href"]))
         except NotImplementedError as e:
-            break
+            pass
         except Exception as e:
             pass
 

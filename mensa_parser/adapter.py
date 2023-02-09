@@ -54,10 +54,6 @@ class FsEtAdapter(PlanAdapter):
         if day is None:
             day = {
                 "date": meal.date,
-                "Mensa": {
-                    "meals": [],
-                    "open": True  # set to true later
-                }
             }
             day_list.append(day)
 
@@ -67,6 +63,11 @@ class FsEtAdapter(PlanAdapter):
             "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}"
         }
         canteen = meal.canteen.to_fs_str()
+        if canteen not in day:
+            day[canteen] = {
+                "meals": [],
+                "open": True
+            }
 
         day[canteen]["meals"].append(meal_dict)
 

@@ -2,34 +2,12 @@ from bs4 import BeautifulSoup
 import urllib.request
 import re
 from enum import Enum
+from .pdf_parser import Canteens
 
 """
 This module is used to get the links to the PDF files.
 """
 
-
-class Canteens(Enum):
-    UL_UNI_Sued = 1,
-    UL_UNI_Nord = 2,
-    UL_UNI_Helmholtz = 3,
-    UL_UNI_West = 4
-
-    def __str__(self):
-        return ''
-
-    @staticmethod
-    def from_str(label: str):
-        l = label.lower().strip()  # all smallercase and trim whitespace
-        if "ul uni mensa süd" in l:
-            return Canteens.UL_UNI_Sued
-        elif "ul uni nord" in l:
-            return Canteens.UL_UNI_Nord
-        elif "ul uni helmholtz" in l:
-            return Canteens.UL_UNI_Helmholtz
-        elif "ul uni west" in l:
-            return Canteens.UL_UNI_West
-        else:
-            raise NotImplementedError
 
 
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"

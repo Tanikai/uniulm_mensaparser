@@ -1,4 +1,4 @@
-from .pdf_parser import MealCategory
+from .pdf_parser import MealCategory, Meal
 
 # Strategy Pattern
 
@@ -7,23 +7,68 @@ class PlanAdapter:
     """
     Abstract class for Mensa Plan adapter.
     """
+
     def convert_plans(self, plans: []) -> dict:
         pass
 
 
 class FsEtAdapter(PlanAdapter):
-
     """
     Plan adapter for Fachschaft Elektrotechnik.
     See https://mensaplan.fs-et.de/data/mensaplan.json for JSON layout.
     """
+
     def convert_plans(self, plans: []) -> dict:
         result = {"weeks": []}
 
+        all_meals = []
+        # iterate over every pdf file plan
         for p in plans:
-            pass
+            all_meals.extend(p["parsed"]["adapter_meals"])
+
+        for m in all_meals:
+            self._add_meal(result, m)
 
         return result
+
+    def _add_meal(self, fsplan: dict, meal: Meal):
+        week = None  # reference
+        week_list = fsplan["weeks"]
+        for i in range(len(week_list)):  # check if week number already in result
+            if week_list[i]["weekNumber"] == meal.week_number:
+                week = week_list[i]
+
+        # if not in week_list -> add new week
+        if week is None:
+            week = {
+                "weekNumber": meal.week_number,
+                "days": [],
+            }
+            week_list.append(week)
+
+        day = None
+        day_list = week["days"]
+        for i in range(len(day_list)):
+            if day_list[i]["date"] == meal.date:
+                day = day_list[i]
+        if day is None:
+            day = {
+                "date": meal.date,
+                "Mensa": {
+                    "meals": [],
+                    "open": True  # set to true later
+                }
+            }
+            day_list.append(day)
+
+        meal_dict = {
+            "category": MealCategory.pretty_print(str(meal.category)),
+            "meal": meal.name,
+            "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}"
+        }
+        canteen = meal.canteen.to_fs_str()
+
+        day[canteen]["meals"].append(meal_dict)
 
 
 class SimpleAdapter(PlanAdapter):

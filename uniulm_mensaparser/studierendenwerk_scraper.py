@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import urllib.request
 import re
 from enum import Enum
-from .pdf_parser import Canteens
+from .models import Canteens
 
 """
 This module is used to get the links to the PDF files.
@@ -13,7 +13,7 @@ This module is used to get the links to the PDF files.
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
-def get_speiseplan(canteens: {Canteens}) -> []:
+def get_plan_urls(canteens: {Canteens}) -> []:
     def ulm_filter(url):
         return url["mensa"] in canteens
 
@@ -24,7 +24,7 @@ def get_speiseplan(canteens: {Canteens}) -> []:
 
 def get_speiseplan_website() -> str:
     """
-    Loads the
+    Loads the HTML source code of the speiseplan website.
     :return:
     """
     speiseplan_source = ""

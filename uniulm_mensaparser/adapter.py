@@ -1,4 +1,4 @@
-from .pdf_parser import MealCategory, Meal
+from .models import MealCategory, Meal
 
 # Strategy Pattern
 

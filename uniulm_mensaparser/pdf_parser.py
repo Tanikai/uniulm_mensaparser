@@ -1,10 +1,17 @@
 import re
 import fitz
-import requests
 from datetime import timedelta, datetime
-from .models import Weekday
+from .models import Weekday, MealCategory, Canteens, Meal
+from abc import abstractmethod
 
-class MensaParser():
+
+class MensaParserIntf:
+    @abstractmethod
+    def parse_plan(self, page: fitz.Page):
+        pass
+
+
+class DefaultMensaParser(MensaParserIntf):
 
     def __init__(self):
         # @TODO SKIP EMPTY DAYS
@@ -30,20 +37,7 @@ class MensaParser():
         for w in Weekday:
             self.is_open[w] = True
 
-    def parse_plan_from_url(self, pdf_url: str):
-        with requests.get(pdf_url) as data:
-            document = fitz.open("pdf", data.content)
-            text = document[0].get_text()
-            self.init_mensa_opened(document[0])
-            return self.parse_plan(text)
-
-    def parse_plan_from_file(self, path: str):
-        document = fitz.open(filename=path, filetype="pdf")
-        text = document[0].get_text()
-        self.init_mensa_opened(document[0])
-        return self.parse_plan(text)
-
-    def init_mensa_opened(self, page: fitz.Page):
+    def _init_mensa_opened(self, page: fitz.Page):
         col_h = 360
         col_w = 140
         col_top = 70
@@ -66,7 +60,10 @@ class MensaParser():
             else:
                 self.plan["weekdays"][day.name.lower()]["text"] = found_text
 
-    def parse_plan(self, plan_source: str):
+    def parse_plan(self, page: fitz.Page):
+        self._init_mensa_opened(page)
+        plan_source = page.get_text()
+
         lines = re.split("\n+", plan_source)
 
         # The plan begins with some date information / meals. We assume that we
@@ -108,8 +105,8 @@ class MensaParser():
                         canteen=Canteens.NONE
                     )
                     new_meals.append(meal)
-                except:
-                    pass
+                except Exception as e:
+                    print("An error occurred while converting", e)
 
         self.plan["adapter_meals"] = new_meals
 
@@ -280,3 +277,7 @@ class MensaParser():
         p["employees"] = split[1]
         p["others"] = split[2]
         return p
+
+
+class MensaNordParser(MensaParserIntf):
+    pass

@@ -130,7 +130,7 @@ class Canteens(Enum):
         elif "ul uni west" in l:
             return Canteens.UL_UNI_West
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Unknown Canteen:" + l)
 
     def to_fs_str(self):
         if self == self.UL_UNI_Sued:
@@ -141,6 +141,7 @@ class Canteens(Enum):
             return "West"
         else:
             return ""
+
 
 @dataclass
 class Meal:

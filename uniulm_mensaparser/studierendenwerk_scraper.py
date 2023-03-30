@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import re
-from enum import Enum
 from .models import Canteens
 
 """
@@ -13,11 +12,12 @@ This module is used to get the links to the PDF files.
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
-def get_plan_urls(canteens: {Canteens}) -> []:
+def get_current_canteen_urls(canteens: {Canteens}) -> []:
     def ulm_filter(url):
         return url["mensa"] in canteens
 
-    plans = get_pdf_links()
+    source = get_speiseplan_website()
+    plans = scrape_pdf_links(source)
     plans = list(filter(ulm_filter, plans))
     return plans
 
@@ -33,12 +33,11 @@ def get_speiseplan_website() -> str:
     return speiseplan_source
 
 
-def get_pdf_links() -> []:
+def scrape_pdf_links(source: str) -> []:
     """
     Returns all PDF links of the Studierendenwerk Ulm website.
     :return:
     """
-    source = get_speiseplan_website()
     soup = BeautifulSoup(source, "html.parser")
 
     links = soup.find_all("a", string="hier")
@@ -47,10 +46,10 @@ def get_pdf_links() -> []:
     for a in links:
         try:
             plans.append(parse_pdf_name(a["href"]))
-        except NotImplementedError as e:
+        except NotImplementedError:
             pass
         except Exception as e:
-            pass
+            print("Error while parsing href:", e)
 
     return plans
 

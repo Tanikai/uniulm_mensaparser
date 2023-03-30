@@ -32,8 +32,8 @@ pip install git+https://github.com/Tanikai/uniulm_mensaparser@main
 After installing, you can use the parser like this:
 
 ```Python
-from mensa_parser import parser, adapter
-from mensa_parser.speiseplan_website_parser import Canteens
+from uniulm_mensaparser import parser, adapter
+from uniulm_mensaparser.parser.studierendenwerk_scraper import Canteens
 
 # specify which canteen plans you want to be parsed in a set
 wanted_canteens = {Canteens.UL_UNI_Sued, Canteens.UL_UNI_West}

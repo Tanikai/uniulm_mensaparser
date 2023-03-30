@@ -1,6 +1,6 @@
 from unittest import TestCase
-from mensa_parser.speiseplan_website_parser import parse_pdf_name, \
-    get_speiseplan, Canteens
+from uniulm_mensaparser.studierendenwerk_scraper import parse_pdf_name, scrape_pdf_links
+from uniulm_mensaparser.models import Canteens
 
 class TestSpeiseplanWebsiteParser(TestCase):
 
@@ -23,13 +23,10 @@ class TestSpeiseplanWebsiteParser(TestCase):
         # self.assertEqual(expected["mensa_name"], given["mensa_name"])
         self.assertEqual(expected["week"], given["week"])
 
-    def test_get_speiseplan(self):
-        links = get_speiseplan({Canteens.UL_UNI_Sued})
-        for l in links:
-            self.assertTrue("UL UNI Mensa Süd" in l["url"])
-        links = get_speiseplan({Canteens.UL_UNI_West})
-        for l in links:
-            self.assertTrue("UL UNI West" in l["url"])
-        links = get_speiseplan({Canteens.UL_UNI_Nord})
-        for l in links:
-            self.assertTrue("UL UNI Nord" in l["url"])
+    def test_html_scrape(self):
+        with open("html/20230330.htm") as f:
+            links = scrape_pdf_links(f.read())
+            self.assertFalse(links == [], "No links found")
+            self.assertEqual(2, len(list(filter(lambda x: x["mensa"] == Canteens.UL_UNI_Nord, links))))
+            self.assertEqual(2, len(list(filter(lambda x: x["mensa"] == Canteens.UL_UNI_Sued, links))))
+            print(links)

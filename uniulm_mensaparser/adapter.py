@@ -1,4 +1,5 @@
 from .models import MealCategory, Meal
+from abc import abstractmethod
 
 # Strategy Pattern
 
@@ -8,6 +9,7 @@ class PlanAdapter:
     Abstract class for Mensa Plan adapter.
     """
 
+    @abstractmethod
     def convert_plans(self, plans: []) -> dict:
         pass
 

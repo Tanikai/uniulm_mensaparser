@@ -8,7 +8,6 @@ This module is used to get the links to the PDF files.
 """
 
 
-
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 

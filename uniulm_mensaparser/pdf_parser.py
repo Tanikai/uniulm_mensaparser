@@ -93,6 +93,8 @@ class DefaultMensaParser(MensaParserIntf):
             day = self.plan["weekdays"][d]
             for meal_cat in day["meals"]:
                 m = day["meals"][meal_cat]
+                if m == {}:
+                    continue
                 try:
                     meal = Meal(
                         name=m["name"],

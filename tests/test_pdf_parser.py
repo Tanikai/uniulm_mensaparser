@@ -1,13 +1,13 @@
 from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
 from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
-from uniulm_mensaparser.models import Weekday
+from uniulm_mensaparser.models import Weekday, Canteens
 
 
 class TestPdfParser(TestCase):
 
     def test_parse_pdf_file(self):
-        mp = DefaultMensaParser()
+        mp = DefaultMensaParser(Canteens.UL_UNI_Sued)
         parsed = parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf", mp)
 
         mon = parsed["weekdays"]["monday"]
@@ -17,7 +17,7 @@ class TestPdfParser(TestCase):
         self.assertEqual(mon["meals"]["prima_klima"]["name"], "Farfalle-Spinat-Pfanne, Kirschtomaten in Käsesahne")
 
     def test_mensa_nord(self):
-        mp = MensaNordParser()
+        mp = MensaNordParser(Canteens.UL_UNI_Nord)
         parsed = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
         print("result", parsed)
 

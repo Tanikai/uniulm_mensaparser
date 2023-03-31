@@ -1,11 +1,15 @@
 import re
 import fitz
 from datetime import timedelta, datetime
-from .models import Weekday, MealCategory, Canteens, Meal
+from .models import Weekday, DefaultMealCategory, BistroMealCategory, Canteens, Meal
 from abc import abstractmethod
 
 
 class MensaParserIntf:
+    @abstractmethod
+    def __init__(self, canteen: Canteens):
+        pass
+
     @abstractmethod
     def parse_plan(self, page: fitz.Page):
         pass
@@ -13,8 +17,12 @@ class MensaParserIntf:
 
 def parse_date_string(line: str) -> dict[Weekday, str]:
     dates = line.split(" ")  # not '-' because a weird code point is used in the pdf
+    offset = 2
+    if len(dates) == 1:
+        dates = line.split("-")
+        offset = 1
     from_date = datetime.strptime(dates[0], "%d.%m.")
-    until_date = datetime.strptime(dates[2], "%d.%m.%Y")
+    until_date = datetime.strptime(dates[offset], "%d.%m.%Y")
 
     if until_date.month < from_date.month:
         from_date = from_date.replace(year=until_date.year - 1)  # new year
@@ -29,7 +37,7 @@ def parse_date_string(line: str) -> dict[Weekday, str]:
         Weekday.FRIDAY: "",
     }
 
-    # set dates for
+    # set dates for weekdays, starting with monday
     for key in wd:
         wd[key] = from_date.strftime("%Y-%m-%d")
         from_date += timedelta(days=1)
@@ -49,24 +57,52 @@ def get_weekday_dates(pdf_lines: str) -> dict[Weekday, str]:
             return parse_date_string(l)
 
 
+def clean_line(line: str) -> str:
+    l = line.strip()
+    return l
+
+
+def remove_allergens(line: str) -> str:
+    parentheses_re = "\(.*?\)"  # ? == greedy match
+    return re.sub(parentheses_re, "", line)
+
+
+def build_meal_name(meal_lines: [str]) -> str:
+    meal_name = " ".join(meal_lines)
+
+    meal_name = remove_allergens(meal_name)
+    # remove duplicate whitespaces
+    meal_name = re.sub("\s+", " ", meal_name)
+    # if the next word begins with an uppercase letter, the - is part of
+    # the word and should be kept
+    meal_name = re.sub("- ([A-Z])", "-\g<1>", meal_name)
+    # if the next word begins with a lowercase letter, the - is used for
+    # hyphenation and thus should be removed
+    meal_name = re.sub("- ([a-z])", "\g<1>", meal_name)
+    meal_name = re.sub(" ,", ",", meal_name)  # remove space before comma
+    meal_name = re.sub(",(?=\S)", ", ", meal_name)  # add space after comma
+    meal_name = meal_name.strip()  # strip remaining whitespace before and after string
+    return meal_name
+
+
 class DefaultMensaParser(MensaParserIntf):
 
-    def __init__(self):
+    def __init__(self, canteen: Canteens):
         # @TODO SKIP EMPTY DAYS
         self.plan = {"weekdays": {}, "adapter_meals": []}
+        self.canteen = canteen
         for w in Weekday:
             weekdayname = w.name.lower()
             self.plan["weekdays"][weekdayname] = {"date": "",
                                                   "meals": {}}  # add weekdays to plan
 
-            for cat in MealCategory:  # add meal categories to weekdays
-                if cat is MealCategory.NONE:
+            for cat in DefaultMealCategory:  # add meal categories to weekdays
+                if cat is DefaultMealCategory.NONE:
                     continue
                 categoryname = cat.name.lower()
                 self.plan["weekdays"][weekdayname]["meals"][categoryname] = {}
 
-        self.current_category = MealCategory.NONE  # MealCategory
-        self.meal_weekday_counter = 1  # counts category of meal
+        self.current_category = DefaultMealCategory.NONE  # MealCategory
         self.meal_category_counter = 1
         self.meal_lines = []
 
@@ -122,13 +158,13 @@ class DefaultMensaParser(MensaParserIntf):
                 try:
                     meal = Meal(
                         name=m["name"],
-                        category=MealCategory.from_str(meal_cat),
+                        category=DefaultMealCategory.from_str(meal_cat),
                         date=day["date"],
                         week_number=-1,
                         price_students=m["prices"]["students"],
                         price_employees=m["prices"]["employees"],
                         price_others=m["prices"]["others"],
-                        canteen=Canteens.NONE
+                        canteen=self.canteen
                     )
                     new_meals.append(meal)
                 except Exception as e:
@@ -156,7 +192,7 @@ class DefaultMensaParser(MensaParserIntf):
         :param line:
         :return: Exit
         """
-        l = self._clean_line(line)
+        l = clean_line(line)
 
         if len(l) == 0:
             return  # skip line if it i
@@ -165,9 +201,9 @@ class DefaultMensaParser(MensaParserIntf):
             return
 
         if self._is_prices(l):
-            category = MealCategory(self.meal_category_counter).name.lower()
+            category = DefaultMealCategory(self.meal_category_counter).name.lower()
             meal_dict = self.plan["weekdays"][weekday.name.lower()]["meals"][category]
-            meal_dict["name"] = self._build_meal_name()
+            meal_dict["name"] = build_meal_name(self.meal_lines)
             self.meal_lines = []
 
             prices = self._parse_prices(l)
@@ -177,34 +213,6 @@ class DefaultMensaParser(MensaParserIntf):
             return
 
         self.meal_lines.append(l)
-
-    def _clean_line(self, line: str) -> str:
-        l = line.strip()  # strip whitespace
-        return l
-
-    def _build_meal_name(self) -> str:
-        meal_name = ""
-
-        for i in range(len(self.meal_lines)):
-            meal_name += self.meal_lines[i] + " "
-
-        meal_name = self._remove_allergens(meal_name)
-        # remove duplicate whitespaces
-        meal_name = re.sub("\s+", " ", meal_name)
-        # if the next word begins with an uppercase letter, the - is part of
-        # the word and should be kept
-        meal_name = re.sub("- ([A-Z])", "-\g<1>", meal_name)
-        # if the next word begins with a lowercase letter, the - is used for
-        # hyphenation and thus should be removed
-        meal_name = re.sub("- ([a-z])", "\g<1>", meal_name)
-        meal_name = re.sub(" ,", ",", meal_name)  # remove space before comma
-        meal_name = re.sub(",[^ ]", ",", meal_name)  # add space after comma
-        meal_name = meal_name.strip()  # strip remaining whitespace
-        return meal_name
-
-    def _remove_allergens(self, line: str) -> str:
-        parentheses_re = "\(.*?\)"  # ? == greedy match
-        return re.sub(parentheses_re, "", line)
 
     def _is_co2(self, line: str) -> bool:
         l = line.lower()
@@ -228,32 +236,24 @@ class DefaultMensaParser(MensaParserIntf):
 
 
 class MensaNordParser(MensaParserIntf):
-    def __init__(self):
+    def __init__(self, canteen: Canteens):
         # @TODO SKIP EMPTY DAYS
-        self.plan = {"weekdays": {}, "adapter_meals": []}
+        self.plan = {"adapter_meals": []}
+        self.canteen = canteen
 
-        for w in Weekday:
-            weekdayname = w.name.lower()
-            self.plan["weekdays"][weekdayname] = {"date": "",
-                                                  "meals": {}}  # add weekdays to plan
-
-            for cat in MealCategory:  # add meal categories to weekdays
-                if cat is MealCategory.NONE:
-                    continue
-                categoryname = cat.name.lower()
-                self.plan["weekdays"][weekdayname]["meals"][categoryname] = {}
-
-        self.current_category = MealCategory.NONE  # MealCategory
-        self.meal_weekday_counter = 1  # counts category of meal
         self.meal_category_counter = 1
         self.meal_lines = []
+        self.price_lines = []
 
         # used to check whether mensa is open at a specific weekday
         self.is_open = {}
         for w in Weekday:
             self.is_open[w] = True
 
-    def _init_mensa_opened(self, page: fitz.Page):
+        self.wd = {}  # weekday to date dictionary
+        self.weekday_text = {}
+
+    def _scrape_weekday_column_text(self, page: fitz.Page):
         col_h = 380
         col_w = 125
         col_top = 85
@@ -268,36 +268,124 @@ class MensaNordParser(MensaParserIntf):
         }
 
         # if empty column is found, mensa is closed for that day
-        for day in rects:
-            found_text = page.get_text("text", clip=rects[day])
+        for day, r in rects.items():
+            found_text = page.get_text("text", clip=r)
             # found_text = page.get_textbox(rects[day])
             if len(found_text) < 100:
                 self.is_open[day] = False
             else:
-                self.plan["weekdays"][day.name.lower()]["text"] = found_text
+                self.weekday_text[day] = found_text
 
-    def _parse_weekday_date(self, line: str):
-        l = line.strip()
-        dates = l.split(" ")  # not - because a weird code point is used in the pdf
-        from_date = datetime.strptime(dates[0], "%d.%m.")
-        until_date = datetime.strptime(dates[2], "%d.%m.%Y")
+    def _scrape_first_meal_prices(self, lines: [str]) -> dict:
+        cell_reached = False
+        prices = ""
+        for l in lines:
+            if "Pizza I" in l:
+                cell_reached = True
+                continue
+            if not cell_reached:
+                continue
 
-        if until_date.month < from_date.month:
-            from_date = from_date.replace(year=until_date.year - 1)  # new year
-        else:
-            from_date = from_date.replace(year=until_date.year)
+            if "€" in l:
+                prices += l.strip()
+                continue
 
-        for i in range(5):
-            self.plan["weekdays"][
-                Weekday.name_from_value(self.meal_weekday_counter)][
-                "date"] = from_date.strftime("%Y-%m-%d")
-            self.meal_weekday_counter += 1
-            from_date = from_date + timedelta(days=1)
+            break
+        return self._parse_prices(prices)
 
-        self.meal_weekday_counter = 1
+    def _parse_prices(self, prices: str) -> dict[str, str]:
+        prices = re.sub("[^a-zA-Z0-9.,€ ]", "", prices)  # pdf contains weird codepoint so use allowlist for string
+        prices = re.sub("\s+", " ", prices)  # remove duplicate whitespace
+
+        split_prices = prices.split(" ")
+
+        p = {
+            "students": split_prices[2] + " €",
+            "employees": split_prices[5] + " €",
+            "others": split_prices[8] + " €",
+        }
+
+        return p
 
     def parse_plan(self, page: fitz.Page):
-        self._init_mensa_opened(page)
-        plan_source = page.get_text()
-        lines = plan_source.split("\n")
-        self._parse_weekday_date(lines[0])
+        self._scrape_weekday_column_text(page)
+        self.wd = get_weekday_dates(page.get_text())
+        lines = re.split("\n+", page.get_text())
+        self.first_meal_prices = self._scrape_first_meal_prices(lines)
+
+        for w in Weekday:
+            self._parse_weekday_column(w)
+
+        return self.plan
+
+    def _parse_weekday_column(self, weekday: Weekday):
+        if not self.is_open[weekday]:
+            return
+
+        # setup
+        column_text = self.weekday_text[weekday]
+        self.meal_lines = []
+        self.meal_category_counter = 1
+        self.price_found = False
+
+        lines = re.split("\n+", column_text)
+        while "Pizza" not in lines[0]:
+            lines.pop(0)
+        lines.append("placeholder")  # add line at end so that parser can finish last meal
+        first_meal = True
+        for l in lines:
+            l = clean_line(l)
+            if first_meal:
+                first_meal = self._ingest_first_meal_line(l, weekday)
+            else:
+                self._ingest_column_line(l, weekday)
+
+    def _ingest_first_meal_line(self, line: str, weekday: Weekday) -> bool:
+        self.meal_lines.append(line)
+        if "(" in line:  # assume that allergy information is last line
+            self._add_meal(weekday, self.first_meal_prices)
+            return False
+
+        return True
+
+    def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
+        self.plan["adapter_meals"].append(Meal(
+            name=build_meal_name(self.meal_lines),
+            category=BistroMealCategory(self.meal_category_counter),
+            date=self.wd[weekday],
+            week_number=-1,  # TODO
+            price_students=prices["students"],
+            price_employees=prices["employees"],
+            price_others=prices["others"],
+            canteen=self.canteen
+        ))
+
+        self.meal_category_counter += 1
+        self.meal_lines = []
+        self.price_lines = []
+
+    def _ingest_column_line(self, line: str, weekday: Weekday):
+        """
+       Parses plan lines by column (i.e. by day)
+       :param line:
+       :return: Exit
+       """
+        l = line
+        if l == "":
+            return  # skip line if empty
+
+        if self._is_prices(l):
+            self.price_found = True
+            self.price_lines.append(l)
+            return
+
+        if self.price_found:  # price was found, but current line is not a price anymore
+            prices = self._parse_prices(" ".join(self.price_lines))
+            self._add_meal(weekday, prices)
+            self.price_found = False
+            # do not return as current line hasn't been parsed
+
+        self.meal_lines.append(l)
+
+    def _is_prices(self, line: str) -> bool:
+        return "€" in line

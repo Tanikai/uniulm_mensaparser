@@ -19,11 +19,11 @@ def parse_plan_from_file(path: str, parser: MensaParserIntf):
 
 def create_parser(c: Canteens) -> MensaParserIntf:
     if c == Canteens.UL_UNI_Sued:
-        return DefaultMensaParser()
+        return DefaultMensaParser(c)
     elif c == Canteens.UL_UNI_West:
-        return DefaultMensaParser()
+        return DefaultMensaParser(c)
     elif c == Canteens.UL_UNI_Nord:
-        return MensaNordParser()
+        return MensaNordParser(c)
     else:
         raise ValueError("unknown canteen")
 

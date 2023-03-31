@@ -60,42 +60,55 @@ class Weekday(Enum):
 
 
 class MealCategory(Enum):
-    NONE = 0
-    FLEISCH_UND_FISCH = 1
-    PRIMA_KLIMA = 2
-    SATTMACHER = 3
-    TOPF_UND_PFANNE = 4
-    EXTRA = 5
-
     @staticmethod
     def from_str(label: str):
         l = label.lower().strip().replace("_", " ")  # all smallercase and trim whitespace
         if "fleisch und fisch" in l:
-            return MealCategory.FLEISCH_UND_FISCH
+            return DefaultMealCategory.FLEISCH_UND_FISCH
         elif "prima klima" in l:
-            return MealCategory.PRIMA_KLIMA
+            return DefaultMealCategory.PRIMA_KLIMA
         elif "sattmacher" in l:
-            return MealCategory.SATTMACHER
+            return DefaultMealCategory.SATTMACHER
         elif "topf und pfanne" in l:
-            return MealCategory.TOPF_UND_PFANNE
+            return DefaultMealCategory.TOPF_UND_PFANNE
         elif "extra" in l:
-            return MealCategory.EXTRA
+            return DefaultMealCategory.EXTRA
+        elif "pizza i" in l:
+            return BistroMealCategory.PIZZA_I
+        elif "pizza ii" in l:
+            return BistroMealCategory.PIZZA_II
+        elif "pizza iii" in l:
+            return BistroMealCategory.PIZZA_III
+        elif "pasta i" in l:
+            return BistroMealCategory.PASTA_I
+        elif "pasta ii" in l:
+            return BistroMealCategory.PASTA_II
         else:
             raise ValueError(f"parse error with input {label}")
 
     @staticmethod
     def pretty_print(value: str):
-        l = value.upper().strip()
-        if "FLEISCH_UND_FISCH" in l:
+        l = value.lower().strip().replace("_", " ")
+        if "fleisch und fisch" in l:
             return "Fleisch und Fisch"
-        elif "PRIMA_KLIMA" in l:
+        elif "prima klima" in l:
             return "Prima Klima"
-        elif "SATTMACHER" in l:
+        elif "sattmacher" in l:
             return "Sattmacher"
-        elif "TOPF_UND_PFANNE" in l:
+        elif "topf und pfanne" in l:
             return "Topf und Pfanne"
-        elif "EXTRA" in l:
+        elif "extra" in l:
             return "Extra"
+        elif "pizza i" in l:
+            return "Pizza I"
+        elif "pizza ii" in l:
+            return "Pizza II"
+        elif "pizza iii" in l:
+            return "Pizza III"
+        elif "pasta i" in l:
+            return "Pasta I"
+        elif "pasta ii" in l:
+            return "Pasta II"
         else:
             return ""
 
@@ -106,6 +119,24 @@ class MealCategory(Enum):
             return True
         except ValueError:
             return False
+
+
+class DefaultMealCategory(MealCategory):
+    NONE = 0
+    FLEISCH_UND_FISCH = 1
+    PRIMA_KLIMA = 2
+    SATTMACHER = 3
+    TOPF_UND_PFANNE = 4
+    EXTRA = 5
+
+
+class BistroMealCategory(MealCategory):
+    NONE = 0
+    PIZZA_I = 1
+    PIZZA_II = 2
+    PIZZA_III = 3
+    PASTA_I = 4
+    PASTA_II = 5
 
 
 class Canteens(Enum):

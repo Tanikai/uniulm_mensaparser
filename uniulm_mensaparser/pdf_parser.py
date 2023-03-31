@@ -12,7 +12,7 @@ class MensaParserIntf:
 
 
 def parse_date_string(line: str) -> dict[Weekday, str]:
-    dates = line.split(" ")   # not '-' because a weird code point is used in the pdf
+    dates = line.split(" ")  # not '-' because a weird code point is used in the pdf
     from_date = datetime.strptime(dates[0], "%d.%m.")
     until_date = datetime.strptime(dates[2], "%d.%m.%Y")
 
@@ -37,7 +37,7 @@ def parse_date_string(line: str) -> dict[Weekday, str]:
     return wd
 
 
-def get_weekday_dates(pdf_lines: [str]) -> dict[Weekday, str]:
+def get_weekday_dates(pdf_lines: str) -> dict[Weekday, str]:
     lines = re.split("\n+", pdf_lines)
 
     while len(lines) > 0:
@@ -47,6 +47,7 @@ def get_weekday_dates(pdf_lines: [str]) -> dict[Weekday, str]:
 
         if "." in l:  # date found
             return parse_date_string(l)
+
 
 class DefaultMensaParser(MensaParserIntf):
 
@@ -99,25 +100,11 @@ class DefaultMensaParser(MensaParserIntf):
 
     def parse_plan(self, page: fitz.Page):
         self._init_mensa_opened(page)
-        plan_source = page.get_text()
 
-        lines = re.split("\n+", plan_source)
-
-        # The plan begins with some date information / meals. We assume that we
-        # have the date as it is contained in the pdf URL. This means that we
-        # can skip until the "Fleisch und Fisch" category starts.
-        meal_reached = False
-        date_found = False
-        while not meal_reached:
-            l = self._clean_line(lines.pop(0))  # remove first item of list
-
-            if not date_found and ("." in l):  # date found
-                self._parse_week(l)
-                date_found = True  # prevent multiple date parsing
-
-            if MealCategory.is_meal_category(l):
-                meal_reached = True
-                self.current_category = MealCategory.from_str(l)
+        # parse dates from pdf
+        wd = get_weekday_dates(page.get_text())
+        for weekday, date in wd.items():
+            self.plan["weekdays"][weekday.name.lower()]["date"] = date
 
         # parse weekday columns
         for day in Weekday:
@@ -191,84 +178,6 @@ class DefaultMensaParser(MensaParserIntf):
 
         self.meal_lines.append(l)
 
-    def _parse_line(self, line: str):
-        """
-        Parses plan lines horizontally.
-        :param line:
-        :return:
-        """
-        l = self._clean_line(line)
-        if len(l) == 0:
-            return  # skip line if it i
-
-        if MealCategory.is_meal_category(l):
-            self.current_category = MealCategory.from_str(l)
-            # if new weekday is found, go to monday again
-            self._reset_weekday()
-            return
-
-        if self._is_co2(l):  # skip co2 lines for the time being
-            return
-
-        if self._is_prices(l):
-            # price is last row of meal, so write all meal data to plan
-            meal_dict = self._get_current_meal()
-            meal_dict["name"] = self._build_meal_name()
-            self.meal_lines = []
-
-            prices = self._parse_prices(l)
-            meal_dict["prices"] = prices
-            return
-
-        # else: it is part of the meal name =)
-        self.meal_lines.append(l)
-
-    def _next_weekday(self):
-        # check whether mensa is opened on next day
-        opened = False
-        while not opened:
-            self.meal_weekday_counter += 1
-
-            if self.meal_weekday_counter > Weekday.FRIDAY.value:  # 6 or larger
-                self.meal_weekday_counter = 1
-
-            opened = self.is_open[Weekday(self.meal_weekday_counter)]
-
-    def _reset_weekday(self):
-        self.meal_weekday_counter = 1
-        opened = self.is_open[Weekday(self.meal_weekday_counter)]
-        if not opened:
-            self._next_weekday()
-
-    def _parse_week(self, line: str):
-        l = line.strip()
-        dates = l.split(" ")  # not - because a weird code point is used in the pdf
-        from_date = datetime.strptime(dates[0], "%d.%m.")
-        until_date = datetime.strptime(dates[2], "%d.%m.%Y")
-
-        if until_date.month < from_date.month:
-            from_date = from_date.replace(year=until_date.year - 1)  # new year
-        else:
-            from_date = from_date.replace(year=until_date.year)
-
-        for i in range(5):
-            self.plan["weekdays"][
-                Weekday.name_from_value(self.meal_weekday_counter)][
-                "date"] = from_date.strftime("%Y-%m-%d")
-            self.meal_weekday_counter += 1
-            from_date = from_date + timedelta(days=1)
-
-        self.meal_weekday_counter = 1
-
-    def _get_current_meal(self) -> dict:
-        """
-        Returns a reference to the current meal.
-        :return:
-        """
-        weekday = Weekday.name_from_value(self.meal_weekday_counter)
-        category = self.current_category.name.lower()
-        return self.plan["weekdays"][weekday]["meals"][category]
-
     def _clean_line(self, line: str) -> str:
         l = line.strip()  # strip whitespace
         return l
@@ -323,8 +232,6 @@ class MensaNordParser(MensaParserIntf):
         # @TODO SKIP EMPTY DAYS
         self.plan = {"weekdays": {}, "adapter_meals": []}
 
-
-
         for w in Weekday:
             weekdayname = w.name.lower()
             self.plan["weekdays"][weekdayname] = {"date": "",
@@ -369,7 +276,6 @@ class MensaNordParser(MensaParserIntf):
             else:
                 self.plan["weekdays"][day.name.lower()]["text"] = found_text
 
-
     def _parse_weekday_date(self, line: str):
         l = line.strip()
         dates = l.split(" ")  # not - because a weird code point is used in the pdf
@@ -395,5 +301,3 @@ class MensaNordParser(MensaParserIntf):
         plan_source = page.get_text()
         lines = plan_source.split("\n")
         self._parse_weekday_date(lines[0])
-
-

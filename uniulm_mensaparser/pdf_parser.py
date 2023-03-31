@@ -11,6 +11,43 @@ class MensaParserIntf:
         pass
 
 
+def parse_date_string(line: str) -> dict[Weekday, str]:
+    dates = line.split(" ")   # not '-' because a weird code point is used in the pdf
+    from_date = datetime.strptime(dates[0], "%d.%m.")
+    until_date = datetime.strptime(dates[2], "%d.%m.%Y")
+
+    if until_date.month < from_date.month:
+        from_date = from_date.replace(year=until_date.year - 1)  # new year
+    else:
+        from_date = from_date.replace(year=until_date.year)
+
+    wd = {
+        Weekday.MONDAY: "",
+        Weekday.TUESDAY: "",
+        Weekday.WEDNESDAY: "",
+        Weekday.THURSDAY: "",
+        Weekday.FRIDAY: "",
+    }
+
+    # set dates for
+    for key in wd:
+        wd[key] = from_date.strftime("%Y-%m-%d")
+        from_date += timedelta(days=1)
+
+    return wd
+
+
+def get_weekday_dates(pdf_lines: [str]) -> dict[Weekday, str]:
+    lines = re.split("\n+", pdf_lines)
+
+    while len(lines) > 0:
+        l = lines.pop(0).strip()  # clean whitespace
+        if l == "":
+            continue
+
+        if "." in l:  # date found
+            return parse_date_string(l)
+
 class DefaultMensaParser(MensaParserIntf):
 
     def __init__(self):
@@ -82,7 +119,7 @@ class DefaultMensaParser(MensaParserIntf):
                 meal_reached = True
                 self.current_category = MealCategory.from_str(l)
 
-        # parse weekdays
+        # parse weekday columns
         for day in Weekday:
             self._parse_weekday(day)
 
@@ -205,7 +242,7 @@ class DefaultMensaParser(MensaParserIntf):
 
     def _parse_week(self, line: str):
         l = line.strip()
-        dates = l.split(" ")  # not - because a weird form is used in the pdf
+        dates = l.split(" ")  # not - because a weird code point is used in the pdf
         from_date = datetime.strptime(dates[0], "%d.%m.")
         until_date = datetime.strptime(dates[2], "%d.%m.%Y")
 
@@ -282,4 +319,81 @@ class DefaultMensaParser(MensaParserIntf):
 
 
 class MensaNordParser(MensaParserIntf):
-    pass
+    def __init__(self):
+        # @TODO SKIP EMPTY DAYS
+        self.plan = {"weekdays": {}, "adapter_meals": []}
+
+
+
+        for w in Weekday:
+            weekdayname = w.name.lower()
+            self.plan["weekdays"][weekdayname] = {"date": "",
+                                                  "meals": {}}  # add weekdays to plan
+
+            for cat in MealCategory:  # add meal categories to weekdays
+                if cat is MealCategory.NONE:
+                    continue
+                categoryname = cat.name.lower()
+                self.plan["weekdays"][weekdayname]["meals"][categoryname] = {}
+
+        self.current_category = MealCategory.NONE  # MealCategory
+        self.meal_weekday_counter = 1  # counts category of meal
+        self.meal_category_counter = 1
+        self.meal_lines = []
+
+        # used to check whether mensa is open at a specific weekday
+        self.is_open = {}
+        for w in Weekday:
+            self.is_open[w] = True
+
+    def _init_mensa_opened(self, page: fitz.Page):
+        col_h = 380
+        col_w = 125
+        col_top = 85
+        col_bot = col_top + col_h
+
+        rects = {
+            Weekday.MONDAY: fitz.Rect(185, col_top, 185 + col_w, col_bot),
+            Weekday.TUESDAY: fitz.Rect(305, col_top, 305 + col_w, col_bot),
+            Weekday.WEDNESDAY: fitz.Rect(430, col_top, 430 + col_w, col_bot),
+            Weekday.THURSDAY: fitz.Rect(555, col_top, 555 + col_w, col_bot),
+            Weekday.FRIDAY: fitz.Rect(675, col_top, 675 + col_w, col_bot),
+        }
+
+        # if empty column is found, mensa is closed for that day
+        for day in rects:
+            found_text = page.get_text("text", clip=rects[day])
+            # found_text = page.get_textbox(rects[day])
+            if len(found_text) < 100:
+                self.is_open[day] = False
+            else:
+                self.plan["weekdays"][day.name.lower()]["text"] = found_text
+
+
+    def _parse_weekday_date(self, line: str):
+        l = line.strip()
+        dates = l.split(" ")  # not - because a weird code point is used in the pdf
+        from_date = datetime.strptime(dates[0], "%d.%m.")
+        until_date = datetime.strptime(dates[2], "%d.%m.%Y")
+
+        if until_date.month < from_date.month:
+            from_date = from_date.replace(year=until_date.year - 1)  # new year
+        else:
+            from_date = from_date.replace(year=until_date.year)
+
+        for i in range(5):
+            self.plan["weekdays"][
+                Weekday.name_from_value(self.meal_weekday_counter)][
+                "date"] = from_date.strftime("%Y-%m-%d")
+            self.meal_weekday_counter += 1
+            from_date = from_date + timedelta(days=1)
+
+        self.meal_weekday_counter = 1
+
+    def parse_plan(self, page: fitz.Page):
+        self._init_mensa_opened(page)
+        plan_source = page.get_text()
+        lines = plan_source.split("\n")
+        self._parse_weekday_date(lines[0])
+
+

@@ -1,7 +1,7 @@
 from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
 from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
-from uniulm_mensaparser.models import Weekday, Canteens, Plan
+from uniulm_mensaparser.models import Weekday, Canteen, Plan
 from uniulm_mensaparser.adapter import SimpleAdapter2
 import json
 import io
@@ -10,7 +10,7 @@ import io
 class TestPdfParser(TestCase):
 
     def test_parse_pdf_file(self):
-        mp = DefaultMensaParser(Canteens.UL_UNI_Sued)
+        mp = DefaultMensaParser(Canteen.UL_UNI_Sued)
         meals = parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf", mp)
 
         mon_fuf = meals[0]
@@ -21,7 +21,7 @@ class TestPdfParser(TestCase):
         self.assertEqual(mon_fuf.price_others, "8,20 €")
 
     def test_mensa_nord(self):
-        mp = MensaNordParser(Canteens.UL_UNI_Nord)
+        mp = MensaNordParser(Canteen.UL_UNI_Nord)
         parsed = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
 
     def test_parse_date_string(self):

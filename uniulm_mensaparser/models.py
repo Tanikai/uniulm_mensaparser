@@ -139,7 +139,7 @@ class BistroMealCategory(MealCategory):
     PASTA_II = 5
 
 
-class Canteens(Enum):
+class Canteen(Enum):
     NONE = 0
     UL_UNI_Sued = 1
     UL_UNI_Nord = 2
@@ -153,13 +153,13 @@ class Canteens(Enum):
     def from_str(label: str):
         l = label.lower().strip()  # all smallercase and trim whitespace
         if "ul uni mensa süd" in l:
-            return Canteens.UL_UNI_Sued
+            return Canteen.UL_UNI_Sued
         elif "ul uni nord" in l:
-            return Canteens.UL_UNI_Nord
+            return Canteen.UL_UNI_Nord
         elif "ul uni helmholtz" in l:
-            return Canteens.UL_UNI_Helmholtz
+            return Canteen.UL_UNI_Helmholtz
         elif "ul uni west" in l:
-            return Canteens.UL_UNI_West
+            return Canteen.UL_UNI_West
         else:
             raise NotImplementedError("Unknown Canteen:" + l)
 
@@ -183,12 +183,12 @@ class Meal:
     price_students: str
     price_employees: str
     price_others: str
-    canteen: Canteens
+    canteen: Canteen
 
 
 @dataclass
 class Plan:
-    canteen: Canteens = Canteens.NONE
+    canteen: Canteen = Canteen.NONE
     url: str = ""
     week: str = ""
     meals: list[Meal] = field(default_factory=list)

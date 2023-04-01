@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import re
-from .models import Canteens, Plan
+from .models import Canteen, Plan
 
 """
 This module is used to get the links to the PDF files.
@@ -10,7 +10,7 @@ This module is used to get the links to the PDF files.
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
-def get_current_canteen_urls(canteens: {Canteens}) -> [Plan]:
+def get_current_canteen_urls(canteens: {Canteen}) -> [Plan]:
     def ulm_filter(plan):
         return plan.canteen in canteens
 
@@ -60,7 +60,7 @@ def parse_pdf_name(href: str) -> Plan:
     file_attrs.pop()  # monthly mensa plan
 
     p = Plan(
-        canteen=Canteens.from_str(" ".join(file_attrs)),
+        canteen=Canteen.from_str(" ".join(file_attrs)),
         url=href,
         week=file_attrs.pop(),  # week in format KW**,
         meals=[]

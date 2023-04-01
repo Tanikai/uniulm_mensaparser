@@ -1,13 +1,13 @@
 import re
 import fitz
 from datetime import timedelta, datetime
-from .models import Weekday, DefaultMealCategory, BistroMealCategory, Canteens, Meal
+from .models import Weekday, DefaultMealCategory, BistroMealCategory, Canteen, Meal
 from abc import abstractmethod
 
 
 class MensaParserIntf:
     @abstractmethod
-    def __init__(self, canteen: Canteens):
+    def __init__(self, canteen: Canteen):
         pass
 
     @abstractmethod
@@ -88,7 +88,7 @@ def build_meal_name(meal_lines: [str]) -> str:
 
 class DefaultMensaParser(MensaParserIntf):
 
-    def __init__(self, canteen: Canteens):
+    def __init__(self, canteen: Canteen):
         # @TODO SKIP EMPTY DAYS
         self.plan = []
         self.canteen = canteen
@@ -207,7 +207,7 @@ class DefaultMensaParser(MensaParserIntf):
 
 
 class MensaNordParser(MensaParserIntf):
-    def __init__(self, canteen: Canteens):
+    def __init__(self, canteen: Canteen):
         # @TODO SKIP EMPTY DAYS
         self.plan = []
         self.canteen = canteen

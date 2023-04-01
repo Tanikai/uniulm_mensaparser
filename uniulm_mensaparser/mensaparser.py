@@ -1,6 +1,6 @@
 from .adapter import SimpleAdapter2
 from .pdf_parser import MensaParserIntf, DefaultMensaParser, MensaNordParser
-from .models import Canteens, Meal
+from .models import Canteen, Meal
 from .studierendenwerk_scraper import get_current_canteen_urls
 import requests
 import fitz
@@ -17,18 +17,18 @@ def parse_plan_from_file(path: str, parser: MensaParserIntf):
         return parser.parse_plan(document[0])
 
 
-def create_parser(c: Canteens) -> MensaParserIntf:
-    if c == Canteens.UL_UNI_Sued:
+def create_parser(c: Canteen) -> MensaParserIntf:
+    if c == Canteen.UL_UNI_Sued:
         return DefaultMensaParser(c)
-    elif c == Canteens.UL_UNI_West:
+    elif c == Canteen.UL_UNI_West:
         return DefaultMensaParser(c)
-    elif c == Canteens.UL_UNI_Nord:
+    elif c == Canteen.UL_UNI_Nord:
         return MensaNordParser(c)
     else:
         raise ValueError("unknown canteen")
 
 
-def get_plans_for_canteens(canteens: {Canteens}, adapter_class=SimpleAdapter2) -> dict:
+def get_plans_for_canteens(canteens: {Canteen}, adapter_class=SimpleAdapter2) -> dict:
     plans = get_current_canteen_urls(canteens)
     for p in plans:
         parser = create_parser(p.canteen)

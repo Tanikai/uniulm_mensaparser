@@ -1,8 +1,9 @@
 from unittest import TestCase
-from mensa_parser import parser, adapter
+from uniulm_mensaparser import api
+
 
 class TestSpeiseplanWebsiteParser(TestCase):
 
     def test_parse_plan(self):
-        test = parser.get_current_plans(adapter.SimpleAdapter)
+        test = api.get_plan()
         print(test)

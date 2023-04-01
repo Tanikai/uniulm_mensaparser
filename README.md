@@ -30,19 +30,18 @@ pip install git+https://github.com/Tanikai/uniulm_mensaparser@main
 ```
 
 After installing, you can use the parser like this:
-
 ```Python
-from mensa_parser import parser, adapter
-from mensa_parser.speiseplan_website_parser import Canteens
+from uniulm_mensaparser import get_plan, Canteen, SimpleAdapter2, FsEtAdapter
+
+# use get_plan() to get plans of all supported canteens
+plan = get_plan()
+print(plan)
 
 # specify which canteen plans you want to be parsed in a set
-wanted_canteens = {Canteens.UL_UNI_Sued, Canteens.UL_UNI_West}
-
-# Pass canteen set and reference to adapter class to parser
-canteen_plan = parser.get_plans_for_canteens(wanted_canteens, adapter.SimpleAdapter)
-
-print(canteen_plan)
-
+my_canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_Nord}
+# pass an adapter class for a different output format
+plan = get_plan(my_canteens, adapter_class=FsEtAdapter)
+print(plan)
 ```
 
 ### Installing for further development
@@ -63,12 +62,6 @@ pip install -r requirements.txt
   extracting PDF links from the Studierendenwerk Ulm website
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) for parsing the canteen plan
   PDF files
-
-## Todo
-
-- [ ] Adapter for the data schema by [Fachschaft Elektrotechik](https://mensaplan.fs-et.de/data/mensaplan.json)
-- [ ] Add parser for Mensa Nord / Bistro 
-- [ ] Better test coverage
 
 ## Authors
 

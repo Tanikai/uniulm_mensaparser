@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="uniulm_mensaparser",
-    version="0.1.0",
+    version="0.2.0",
     author="Tanikai",
     author_email="kai@anter.dev",
     description="",
@@ -20,7 +20,7 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    packages=["mensa_parser"],
+    packages=["uniulm_mensaparser"],
     python_requires=">=3.0",
     install_requires=[
         "beautifulsoup4",

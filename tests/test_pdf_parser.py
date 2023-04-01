@@ -1,23 +1,51 @@
 from unittest import TestCase
-from mensa_parser.parser import parse_from_url
-from mensa_parser.pdf_parser import MensaParser
-from mensa_parser.speiseplan_website_parser import get_speiseplan, Canteens
+from uniulm_mensaparser.mensaparser import parse_plan_from_file
+from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
+from uniulm_mensaparser.models import Weekday, Canteen, BistroMealCategory
+
 
 class TestPdfParser(TestCase):
 
     def test_parse_pdf_file(self):
-        mp = MensaParser()
-        text = mp.parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf")
+        mp = DefaultMensaParser(Canteen.UL_UNI_Sued)
+        meals = parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf", mp)
 
-        mon = text["weekdays"]["monday"]
-        self.assertEqual(mon["date"], '2022-10-31')
-        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["name"], 'Cevapcici mit Ajvar Djuvetschreis')
-        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["prices"], {'students': '4,30 €', 'employees': '6,20 €', 'others': '8,20 €'})
-        self.assertEqual(mon["meals"]["prima_klima"]["name"], "Farfalle-Spinat-Pfanne, Kirschtomaten in Käsesahne")
+        mon_fuf = meals[0]
+        self.assertEqual(mon_fuf.date, "2022-10-31")
+        self.assertEqual(mon_fuf.name, 'Cevapcici mit Ajvar Djuvetschreis')
+        self.assertEqual(mon_fuf.price_students, "4,30 €")
+        self.assertEqual(mon_fuf.price_employees, "6,20 €")
+        self.assertEqual(mon_fuf.price_others, "8,20 €")
 
-    def test_uni_west(self):
-        plans = get_speiseplan({Canteens.UL_UNI_West})
-        for p in plans:
-            p["parsed"] = parse_from_url(p["url"])
+    def test_mensa_nord(self):
+        mp = MensaNordParser(Canteen.UL_UNI_Nord)
+        parsed = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
 
-        print(plans)
+        print(parsed)
+        self.assertEqual(BistroMealCategory.PIZZA_I, parsed[0].category)
+        self.assertEqual(BistroMealCategory.PIZZA_II, parsed[1].category)
+        self.assertEqual(BistroMealCategory.PIZZA_III, parsed[2].category)
+        self.assertEqual(BistroMealCategory.PASTA_I, parsed[3].category)
+        self.assertEqual(BistroMealCategory.PASTA_II, parsed[4].category)
+
+    def test_parse_date_string(self):
+        wd = parse_date_string("27.03. - 31.03.2023")
+        self.assertEqual("2023-03-27", wd[Weekday.MONDAY])
+        self.assertEqual("2023-03-28", wd[Weekday.TUESDAY])
+        self.assertEqual("2023-03-29", wd[Weekday.WEDNESDAY])
+        self.assertEqual("2023-03-30", wd[Weekday.THURSDAY])
+        self.assertEqual("2023-03-31", wd[Weekday.FRIDAY])
+
+        wd = parse_date_string("27.02. - 03.03.2023")
+        self.assertEqual("2023-02-27", wd[Weekday.MONDAY])
+        self.assertEqual("2023-02-28", wd[Weekday.TUESDAY])
+        self.assertEqual("2023-03-01", wd[Weekday.WEDNESDAY])
+        self.assertEqual("2023-03-02", wd[Weekday.THURSDAY])
+        self.assertEqual("2023-03-03", wd[Weekday.FRIDAY])
+
+        wd = parse_date_string("30.12. - 03.01.2023")
+        self.assertEqual("2022-12-30", wd[Weekday.MONDAY])
+        self.assertEqual("2022-12-31", wd[Weekday.TUESDAY])
+        self.assertEqual("2023-01-01", wd[Weekday.WEDNESDAY])
+        self.assertEqual("2023-01-02", wd[Weekday.THURSDAY])
+        self.assertEqual("2023-01-03", wd[Weekday.FRIDAY])

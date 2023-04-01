@@ -11,7 +11,7 @@ class MensaParserIntf:
         pass
 
     @abstractmethod
-    def parse_plan(self, page: fitz.Page):
+    def parse_plan(self, page: fitz.Page) -> [Meal]:
         pass
 
 
@@ -80,7 +80,8 @@ def build_meal_name(meal_lines: [str]) -> str:
     # hyphenation and thus should be removed
     meal_name = re.sub("- ([a-z])", "\g<1>", meal_name)
     meal_name = re.sub(" ,", ",", meal_name)  # remove space before comma
-    meal_name = re.sub(",(?=\S)", ", ", meal_name)  # add space after comma
+    # meal_name = re.sub(",(?=\S)", ", ", meal_name)  # add space after comma
+    meal_name = re.sub(",[^ ]", ",", meal_name)
     meal_name = meal_name.strip()  # strip remaining whitespace before and after string
     return meal_name
 
@@ -89,29 +90,22 @@ class DefaultMensaParser(MensaParserIntf):
 
     def __init__(self, canteen: Canteens):
         # @TODO SKIP EMPTY DAYS
-        self.plan = {"weekdays": {}, "adapter_meals": []}
+        self.plan = []
         self.canteen = canteen
-        for w in Weekday:
-            weekdayname = w.name.lower()
-            self.plan["weekdays"][weekdayname] = {"date": "",
-                                                  "meals": {}}  # add weekdays to plan
 
-            for cat in DefaultMealCategory:  # add meal categories to weekdays
-                if cat is DefaultMealCategory.NONE:
-                    continue
-                categoryname = cat.name.lower()
-                self.plan["weekdays"][weekdayname]["meals"][categoryname] = {}
-
-        self.current_category = DefaultMealCategory.NONE  # MealCategory
         self.meal_category_counter = 1
         self.meal_lines = []
+        self.price_lines = []
 
         # used to check whether mensa is open at a specific weekday
         self.is_open = {}
         for w in Weekday:
             self.is_open[w] = True
 
-    def _init_mensa_opened(self, page: fitz.Page):
+        self.wd = {}  # weekday to date dictionary
+        self.weekday_text = {}
+
+    def _scrape_weekday_column_text(self, page: fitz.Page):
         col_h = 360
         col_w = 140
         col_top = 70
@@ -132,61 +126,31 @@ class DefaultMensaParser(MensaParserIntf):
             if len(found_text) < 100:
                 self.is_open[day] = False
             else:
-                self.plan["weekdays"][day.name.lower()]["text"] = found_text
+                self.weekday_text[day] = found_text
 
-    def parse_plan(self, page: fitz.Page):
-        self._init_mensa_opened(page)
-
-        # parse dates from pdf
-        wd = get_weekday_dates(page.get_text())
-        for weekday, date in wd.items():
-            self.plan["weekdays"][weekday.name.lower()]["date"] = date
+    def parse_plan(self, page: fitz.Page) -> [Meal]:
+        self._scrape_weekday_column_text(page)
+        self.wd = get_weekday_dates(page.get_text())
 
         # parse weekday columns
         for day in Weekday:
-            self._parse_weekday(day)
-
-        # convert meals to new format
-        new_meals = []
-
-        for d in self.plan["weekdays"]:
-            day = self.plan["weekdays"][d]
-            for meal_cat in day["meals"]:
-                m = day["meals"][meal_cat]
-                if m == {}:
-                    continue
-                try:
-                    meal = Meal(
-                        name=m["name"],
-                        category=DefaultMealCategory.from_str(meal_cat),
-                        date=day["date"],
-                        week_number=-1,
-                        price_students=m["prices"]["students"],
-                        price_employees=m["prices"]["employees"],
-                        price_others=m["prices"]["others"],
-                        canteen=self.canteen
-                    )
-                    new_meals.append(meal)
-                except Exception as e:
-                    print("An error occurred while converting", e)
-
-        self.plan["adapter_meals"] = new_meals
+            self._parse_weekday_column(day)
 
         return self.plan
 
-    def _parse_weekday(self, weekday: Weekday):
+    def _parse_weekday_column(self, weekday: Weekday):
         if not self.is_open[weekday]:
             return
-        col_text = self.plan["weekdays"][weekday.name.lower()]["text"]
 
-        lines = re.split("\n+", col_text)
-        for l in lines:
-            self._parse_column_line(l, weekday)
-
-        self.meal_lines = []  # clean up rest
+        column_text = self.weekday_text[weekday]
+        self.meal_lines = []
         self.meal_category_counter = 1
 
-    def _parse_column_line(self, line: str, weekday: Weekday):
+        lines = re.split("\n+", column_text)
+        for l in lines:
+            self._ingest_column_line(l, weekday)
+
+    def _ingest_column_line(self, line: str, weekday: Weekday):
         """
         Parses plan lines by column (i.e. by day)
         :param line:
@@ -201,18 +165,25 @@ class DefaultMensaParser(MensaParserIntf):
             return
 
         if self._is_prices(l):
-            category = DefaultMealCategory(self.meal_category_counter).name.lower()
-            meal_dict = self.plan["weekdays"][weekday.name.lower()]["meals"][category]
-            meal_dict["name"] = build_meal_name(self.meal_lines)
-            self.meal_lines = []
-
             prices = self._parse_prices(l)
-            meal_dict["prices"] = prices
-
-            self.meal_category_counter += 1
+            self._add_meal(weekday, prices)
             return
 
         self.meal_lines.append(l)
+
+    def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
+        self.plan.append(Meal(
+            name=build_meal_name(self.meal_lines),
+            category=DefaultMealCategory(self.meal_category_counter),
+            date=self.wd[weekday],
+            week_number=-1,  # TODO
+            price_students=prices["students"],
+            price_employees=prices["employees"],
+            price_others=prices["others"],
+            canteen=self.canteen
+        ))
+        self.meal_category_counter += 1
+        self.meal_lines = []
 
     def _is_co2(self, line: str) -> bool:
         l = line.lower()
@@ -238,7 +209,7 @@ class DefaultMensaParser(MensaParserIntf):
 class MensaNordParser(MensaParserIntf):
     def __init__(self, canteen: Canteens):
         # @TODO SKIP EMPTY DAYS
-        self.plan = {"adapter_meals": []}
+        self.plan = []
         self.canteen = canteen
 
         self.meal_category_counter = 1
@@ -307,7 +278,7 @@ class MensaNordParser(MensaParserIntf):
 
         return p
 
-    def parse_plan(self, page: fitz.Page):
+    def parse_plan(self, page: fitz.Page) -> [Meal]:
         self._scrape_weekday_column_text(page)
         self.wd = get_weekday_dates(page.get_text())
         lines = re.split("\n+", page.get_text())
@@ -349,7 +320,7 @@ class MensaNordParser(MensaParserIntf):
         return True
 
     def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
-        self.plan["adapter_meals"].append(Meal(
+        self.plan.append(Meal(
             name=build_meal_name(self.meal_lines),
             category=BistroMealCategory(self.meal_category_counter),
             date=self.wd[weekday],

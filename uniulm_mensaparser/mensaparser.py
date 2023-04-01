@@ -1,12 +1,12 @@
-from .adapter import SimpleAdapter
+from .adapter import SimpleAdapter2
 from .pdf_parser import MensaParserIntf, DefaultMensaParser, MensaNordParser
-from .models import Canteens
+from .models import Canteens, Meal
 from .studierendenwerk_scraper import get_current_canteen_urls
 import requests
 import fitz
 
 
-def parse_plan_from_url(pdf_url: str, parser: MensaParserIntf):
+def parse_plan_from_url(pdf_url: str, parser: MensaParserIntf) -> [Meal]:
     with requests.get(pdf_url) as data:
         document = fitz.open("pdf", data.content)
         return parser.parse_plan(document[0])
@@ -28,18 +28,11 @@ def create_parser(c: Canteens) -> MensaParserIntf:
         raise ValueError("unknown canteen")
 
 
-def get_plans_for_canteens(canteens: {Canteens}, adapter_class=SimpleAdapter) -> dict:
+def get_plans_for_canteens(canteens: {Canteens}, adapter_class=SimpleAdapter2) -> dict:
     plans = get_current_canteen_urls(canteens)
-    # try:
     for p in plans:
-        parser = create_parser(p["mensa"])
-        p["parsed"] = parse_plan_from_url(p["url"], parser)
-        # add metadata to meals
-        week = int(p["week"][2:])
-        canteen = p["mensa"]
-        for m in p["parsed"]["adapter_meals"]:
-            m.week_number = week
-            m.canteen = canteen
+        parser = create_parser(p.canteen)
+        p.meals = parse_plan_from_url(p.url, parser)
 
     adapter = adapter_class()
     converted = adapter.convert_plans(plans)

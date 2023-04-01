@@ -1,16 +1,21 @@
-from .models import MealCategory, Meal
+from .models import MealCategory, Meal, Plan
 from abc import abstractmethod
+from collections import defaultdict
+
+
+def recursively_default_dict():
+    return defaultdict(recursively_default_dict)
+
 
 # Strategy Pattern
 
-
 class PlanAdapter:
     """
-    Abstract class for Mensa Plan adapter.
+    Interface for Mensa Plan adapter.
     """
 
     @abstractmethod
-    def convert_plans(self, plans: []) -> dict:
+    def convert_plans(self, plans: [Plan]) -> dict:
         pass
 
 
@@ -20,16 +25,11 @@ class FsEtAdapter(PlanAdapter):
     See https://mensaplan.fs-et.de/data/mensaplan.json for JSON layout.
     """
 
-    def convert_plans(self, plans: []) -> dict:
+    def convert_plans(self, plans: [Plan]) -> dict:
         result = {"weeks": []}
 
-        all_meals = []
-        # iterate over every pdf file plan
         for p in plans:
-            all_meals.extend(p["parsed"]["adapter_meals"])
-
-        for m in all_meals:
-            self._add_meal(result, m)
+            self._add_meal(result, p)
 
         return result
 
@@ -74,9 +74,34 @@ class FsEtAdapter(PlanAdapter):
         day[canteen]["meals"].append(meal_dict)
 
 
+class SimpleAdapter2(PlanAdapter):
+
+    def convert_plans(self, plans: [Plan]) -> dict:
+        result = recursively_default_dict()
+
+        for p in plans:
+            for meal in p.meals:
+                self._add_meal(result, meal)
+
+        return dict(result)
+
+    def _add_meal(self, result: dict, meal: Meal):
+        mensa_name = meal.canteen.name.lower()
+        result[mensa_name].setdefault(meal.date, [])
+        result[mensa_name][meal.date].append({
+            "name": meal.name,
+            "category": MealCategory.pretty_print(meal.category.name),
+            "prices": {
+                "students": meal.price_students,
+                "employees": meal.price_employees,
+                "others": meal.price_others,
+            }
+        })
+
+
 class SimpleAdapter(PlanAdapter):
 
-    def convert_plans(self, plans: []) -> dict:
+    def convert_plans(self, plans: [Plan]) -> dict:
         result = {}
 
         for p in plans:

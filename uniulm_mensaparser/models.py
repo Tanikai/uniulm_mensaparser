@@ -1,5 +1,5 @@
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 legend = {
     'S': "Schwein",
@@ -184,3 +184,11 @@ class Meal:
     price_employees: str
     price_others: str
     canteen: Canteens
+
+
+@dataclass
+class Plan:
+    canteen: Canteens = Canteens.NONE
+    url: str = ""
+    week: str = ""
+    meals: list[Meal] = field(default_factory=list)

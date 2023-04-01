@@ -1,25 +1,28 @@
 from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
 from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
-from uniulm_mensaparser.models import Weekday, Canteens
+from uniulm_mensaparser.models import Weekday, Canteens, Plan
+from uniulm_mensaparser.adapter import SimpleAdapter2
+import json
+import io
 
 
 class TestPdfParser(TestCase):
 
     def test_parse_pdf_file(self):
         mp = DefaultMensaParser(Canteens.UL_UNI_Sued)
-        parsed = parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf", mp)
+        meals = parse_plan_from_file("resources/UL UNI Mensa Süd KW44 W3.pdf", mp)
 
-        mon = parsed["weekdays"]["monday"]
-        self.assertEqual(mon["date"], '2022-10-31')
-        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["name"], 'Cevapcici mit Ajvar Djuvetschreis')
-        self.assertEqual(mon["meals"]["fleisch_und_fisch"]["prices"], {'students': '4,30 €', 'employees': '6,20 €', 'others': '8,20 €'})
-        self.assertEqual(mon["meals"]["prima_klima"]["name"], "Farfalle-Spinat-Pfanne, Kirschtomaten in Käsesahne")
+        mon_fuf = meals[0]
+        self.assertEqual(mon_fuf.date, "2022-10-31")
+        self.assertEqual(mon_fuf.name, 'Cevapcici mit Ajvar Djuvetschreis')
+        self.assertEqual(mon_fuf.price_students, "4,30 €")
+        self.assertEqual(mon_fuf.price_employees, "6,20 €")
+        self.assertEqual(mon_fuf.price_others, "8,20 €")
 
     def test_mensa_nord(self):
         mp = MensaNordParser(Canteens.UL_UNI_Nord)
         parsed = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
-        print("result", parsed)
 
     def test_parse_date_string(self):
         wd = parse_date_string("27.03. - 31.03.2023")

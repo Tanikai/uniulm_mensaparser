@@ -1,19 +1,18 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import re
-from .models import Canteens
+from .models import Canteens, Plan
 
 """
 This module is used to get the links to the PDF files.
 """
 
-
 BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 
 
-def get_current_canteen_urls(canteens: {Canteens}) -> []:
-    def ulm_filter(url):
-        return url["mensa"] in canteens
+def get_current_canteen_urls(canteens: {Canteens}) -> [Plan]:
+    def ulm_filter(plan):
+        return plan.canteen in canteens
 
     source = get_speiseplan_website()
     plans = scrape_pdf_links(source)
@@ -32,7 +31,7 @@ def get_speiseplan_website() -> str:
     return speiseplan_source
 
 
-def scrape_pdf_links(source: str) -> []:
+def scrape_pdf_links(source: str) -> [Plan]:
     """
     Returns all PDF links of the Studierendenwerk Ulm website.
     :return:
@@ -53,13 +52,18 @@ def scrape_pdf_links(source: str) -> []:
     return plans
 
 
-def parse_pdf_name(href: str) -> dict:
-    plan = {"url": href}
+def parse_pdf_name(href: str) -> Plan:
     split_list = href.split("/")
     filename = split_list.pop()  # get last element of list -> filename
     filename = filename[:-4]  # remove .pdf
     file_attrs = re.split('\s+', filename)
     file_attrs.pop()  # monthly mensa plan
-    plan["week"] = file_attrs.pop()  # week in format KW**
-    plan["mensa"] = Canteens.from_str(" ".join(file_attrs))
-    return plan
+
+    p = Plan(
+        canteen=Canteens.from_str(" ".join(file_attrs)),
+        url=href,
+        week=file_attrs.pop(),  # week in format KW**,
+        meals=[]
+    )
+
+    return p

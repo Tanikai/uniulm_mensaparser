@@ -1,10 +1,7 @@
 from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
 from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
-from uniulm_mensaparser.models import Weekday, Canteen, Plan
-from uniulm_mensaparser.adapter import SimpleAdapter2
-import json
-import io
+from uniulm_mensaparser.models import Weekday, Canteen, BistroMealCategory
 
 
 class TestPdfParser(TestCase):
@@ -23,6 +20,13 @@ class TestPdfParser(TestCase):
     def test_mensa_nord(self):
         mp = MensaNordParser(Canteen.UL_UNI_Nord)
         parsed = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
+
+        print(parsed)
+        self.assertEqual(BistroMealCategory.PIZZA_I, parsed[0].category)
+        self.assertEqual(BistroMealCategory.PIZZA_II, parsed[1].category)
+        self.assertEqual(BistroMealCategory.PIZZA_III, parsed[2].category)
+        self.assertEqual(BistroMealCategory.PASTA_I, parsed[3].category)
+        self.assertEqual(BistroMealCategory.PASTA_II, parsed[4].category)
 
     def test_parse_date_string(self):
         wd = parse_date_string("27.03. - 31.03.2023")

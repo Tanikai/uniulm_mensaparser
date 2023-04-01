@@ -2,7 +2,7 @@ from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
 from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
 from uniulm_mensaparser.models import Weekday, Canteen, Plan
-from uniulm_mensaparser.adapter import SimpleAdapter2
+from uniulm_mensaparser.adapter import SimpleAdapter2, FsEtAdapter
 import json
 import io
 
@@ -19,3 +19,11 @@ class TestAdapter(TestCase):
             actual_split = actual.split("\n")
             expected_split = expected.split("\n")
             self.assertListEqual(expected_split, actual_split)  # sorry
+
+    def test_fset_adapter(self):
+        mp = MensaNordParser(Canteen.UL_UNI_West)
+        meal = parse_plan_from_file("resources/UL UNI Nord KW44 W2.pdf", mp)
+        plans = Plan(meals=meal)
+        adapter = FsEtAdapter()
+        actual = json.dumps(adapter.convert_plans([plans]), indent=2)
+        print(actual)

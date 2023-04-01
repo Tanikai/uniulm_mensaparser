@@ -1,4 +1,4 @@
-from .adapter import SimpleAdapter2
+from .adapter import PlanAdapter
 from .pdf_parser import MensaParserIntf, DefaultMensaParser, MensaNordParser
 from .models import Canteen, Meal
 from .studierendenwerk_scraper import get_current_canteen_urls
@@ -28,7 +28,7 @@ def create_parser(c: Canteen) -> MensaParserIntf:
         raise ValueError("unknown canteen")
 
 
-def get_plans_for_canteens(canteens: {Canteen}, adapter_class=SimpleAdapter2) -> dict:
+def get_plans_for_canteens(canteens: {Canteen}, adapter_class=PlanAdapter) -> dict:
     plans = get_current_canteen_urls(canteens)
     for p in plans:
         parser = create_parser(p.canteen)

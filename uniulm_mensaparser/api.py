@@ -7,12 +7,11 @@ Library API
 """
 
 
-def get_plan(canteens={}, adapter_class=None):
-    c = canteens
-    if c == {}:
-        c = {Canteen.UL_UNI_Sued}
+def get_plan(canteens=None, adapter_class=None):
+    if canteens is None:
+        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West, Canteen.UL_UNI_Nord}
 
     if adapter_class is None:
         adapter_class = SimpleAdapter2
 
-    return get_plans_for_canteens(c, adapter_class)
+    return get_plans_for_canteens(canteens, adapter_class)

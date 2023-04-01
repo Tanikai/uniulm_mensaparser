@@ -29,7 +29,8 @@ class FsEtAdapter(PlanAdapter):
         result = {"weeks": []}
 
         for p in plans:
-            self._add_meal(result, p)
+            for m in p.meals:
+                self._add_meal(result, m)
 
         return result
 
@@ -82,6 +83,9 @@ class SimpleAdapter2(PlanAdapter):
         for p in plans:
             for meal in p.meals:
                 self._add_meal(result, meal)
+
+        for k, v in result.items():
+            result[k] = dict(v)  # convert to normal dict
 
         return dict(result)
 

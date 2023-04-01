@@ -176,7 +176,7 @@ class DefaultMensaParser(MensaParserIntf):
             name=build_meal_name(self.meal_lines),
             category=DefaultMealCategory(self.meal_category_counter),
             date=self.wd[weekday],
-            week_number=-1,  # TODO
+            week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
             price_students=prices["students"],
             price_employees=prices["employees"],
             price_others=prices["others"],
@@ -225,7 +225,7 @@ class MensaNordParser(MensaParserIntf):
         self.weekday_text = {}
 
     def _scrape_weekday_column_text(self, page: fitz.Page):
-        col_h = 380
+        col_h = 390
         col_w = 125
         col_top = 85
         col_bot = col_top + col_h
@@ -324,7 +324,7 @@ class MensaNordParser(MensaParserIntf):
             name=build_meal_name(self.meal_lines),
             category=BistroMealCategory(self.meal_category_counter),
             date=self.wd[weekday],
-            week_number=-1,  # TODO
+            week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
             price_students=prices["students"],
             price_employees=prices["employees"],
             price_others=prices["others"],

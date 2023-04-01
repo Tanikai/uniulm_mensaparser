@@ -73,16 +73,16 @@ class MealCategory(Enum):
             return DefaultMealCategory.TOPF_UND_PFANNE
         elif "extra" in l:
             return DefaultMealCategory.EXTRA
-        elif "pizza i" in l:
-            return BistroMealCategory.PIZZA_I
-        elif "pizza ii" in l:
-            return BistroMealCategory.PIZZA_II
         elif "pizza iii" in l:
             return BistroMealCategory.PIZZA_III
-        elif "pasta i" in l:
-            return BistroMealCategory.PASTA_I
+        elif "pizza ii" in l:
+            return BistroMealCategory.PIZZA_II
+        elif "pizza i" in l:
+            return BistroMealCategory.PIZZA_I
         elif "pasta ii" in l:
             return BistroMealCategory.PASTA_II
+        elif "pasta i" in l:
+            return BistroMealCategory.PASTA_I
         else:
             raise ValueError(f"parse error with input {label}")
 
@@ -99,16 +99,16 @@ class MealCategory(Enum):
             return "Topf und Pfanne"
         elif "extra" in l:
             return "Extra"
-        elif "pizza i" in l:
-            return "Pizza I"
-        elif "pizza ii" in l:
-            return "Pizza II"
         elif "pizza iii" in l:
             return "Pizza III"
-        elif "pasta i" in l:
-            return "Pasta I"
+        elif "pizza ii" in l:
+            return "Pizza II"
+        elif "pizza i" in l:
+            return "Pizza I"
         elif "pasta ii" in l:
             return "Pasta II"
+        elif "pasta i" in l:
+            return "Pasta I"
         else:
             return ""
 

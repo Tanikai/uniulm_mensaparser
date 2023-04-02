@@ -176,14 +176,14 @@ class Canteen(Enum):
 
 @dataclass
 class Meal:
-    name: str
-    category: MealCategory
-    date: str
-    week_number: int
-    price_students: str
-    price_employees: str
-    price_others: str
-    canteen: Canteen
+    name: str = ""
+    category: MealCategory = DefaultMealCategory.NONE
+    date: str = ""
+    week_number: int = -1
+    price_students: str = ""
+    price_employees: str = ""
+    price_others: str = ""
+    canteen: Canteen = Canteen.NONE
 
 
 @dataclass
@@ -191,4 +191,5 @@ class Plan:
     canteen: Canteen = Canteen.NONE
     url: str = ""
     week: str = ""
+    opened_days: dict[str, bool] = field(default_factory=dict)
     meals: list[Meal] = field(default_factory=list)

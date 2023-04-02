@@ -12,7 +12,7 @@ def parse_plan_from_url(pdf_url: str, parser: MensaParserIntf) -> [Meal]:
         return parser.parse_plan(document[0])
 
 
-def parse_plan_from_file(path: str, parser: MensaParserIntf):
+def parse_plan_from_file(path: str, parser: MensaParserIntf) -> [Meal]:
     with fitz.open(filename=path, filetype="pdf") as document:
         return parser.parse_plan(document[0])
 
@@ -33,6 +33,7 @@ def get_plans_for_canteens(canteens: {Canteen}, adapter_class=PlanAdapter) -> di
     for p in plans:
         parser = create_parser(p.canteen)
         p.meals = parse_plan_from_url(p.url, parser)
+        p.opened_days = parser.get_opened_days()
 
     adapter = adapter_class()
     converted = adapter.convert_plans(plans)

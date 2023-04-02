@@ -14,6 +14,10 @@ class MensaParserIntf:
     def parse_plan(self, page: fitz.Page) -> [Meal]:
         pass
 
+    @abstractmethod
+    def get_opened_days(self) -> dict[str, bool]:
+        pass
+
 
 def parse_date_string(line: str) -> dict[Weekday, str]:
     dates = line.split(" ")  # not '-' because a weird code point is used in the pdf
@@ -104,6 +108,13 @@ class DefaultMensaParser(MensaParserIntf):
 
         self.wd = {}  # weekday to date dictionary
         self.weekday_text = {}
+
+    def get_opened_days(self) -> dict[str, bool]:
+        open_status = {}
+        for weekday, opened in self.is_open.items():
+            open_status[self.wd[weekday]] = opened
+            
+        return open_status
 
     def _scrape_weekday_column_text(self, page: fitz.Page):
         col_h = 360
@@ -223,6 +234,13 @@ class MensaNordParser(MensaParserIntf):
 
         self.wd = {}  # weekday to date dictionary
         self.weekday_text = {}
+
+    def get_opened_days(self) -> dict[str, bool]:
+        open_status = {}
+        for weekday, opened in self.is_open.items():
+            open_status[self.wd[weekday]] = opened
+
+        return open_status
 
     def _scrape_weekday_column_text(self, page: fitz.Page):
         col_h = 390

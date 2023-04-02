@@ -4,6 +4,8 @@ This project contains a parser for the canteen / mensa plans at
 Ulm University that are provided on the
 [Studierendenwerk Ulm website](https://studierendenwerk-ulm.de/essen-trinken/speiseplaene/).
 
+You can see the data in action on [](https://mensaplan2.anter.dev/)
+
 The parsed data can be accessed here:
 [uulm.anter.dev/api/v1/canteens/ul_uni_sued](https://uulm.anter.dev/api/v1/canteens/ul_uni_sued)
 
@@ -65,9 +67,9 @@ pip install -r requirements.txt
 
 ## Authors
 
-- **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Twitter](https://twitter.com/tanikai29)
+- **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Mastodon](https://hachyderm.io/@Tanikai)
 
 ## License
 
 This project is licensed under the GNU General Public License Version 3 - see
-the [LICENSE.md](LICENSE.md) file for details
+the [LICENSE](LICENSE) file for details

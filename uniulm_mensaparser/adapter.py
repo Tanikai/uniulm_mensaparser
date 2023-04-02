@@ -32,6 +32,17 @@ class FsEtAdapter(PlanAdapter):
             for m in p.meals:
                 self._add_meal(result, m)
 
+            for weekday_str, opened in p.opened_days.items():
+                if opened:
+                    continue
+
+                self._add_meal(result, Meal(
+                    name="[closed]",
+                    week_number=int(p.week[2:]),
+                    date=weekday_str,
+                    canteen=p.canteen
+                ))
+
         return result
 
     def _add_meal(self, fsplan: dict, meal: Meal):
@@ -60,12 +71,21 @@ class FsEtAdapter(PlanAdapter):
             }
             day_list.append(day)
 
+        canteen = meal.canteen.to_fs_str()
+
+        # special case to add empty day to plan
+        if meal.name == "[closed]":
+            day[canteen] = {
+                "meals": [],
+                "open": False
+            }
+            return
+
         meal_dict = {
             "category": MealCategory.pretty_print(str(meal.category)),
             "meal": meal.name,
             "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}"
         }
-        canteen = meal.canteen.to_fs_str()
         if canteen not in day:
             day[canteen] = {
                 "meals": [],
@@ -83,6 +103,13 @@ class SimpleAdapter2(PlanAdapter):
         for p in plans:
             for meal in p.meals:
                 self._add_meal(result, meal)
+
+            # add empty days
+            for weekday_str, opened in p.opened_days.items():
+                if opened:
+                    continue
+                # if day is not opened: create
+                result[p.canteen.name.lower()][weekday_str] = []
 
         for k, v in result.items():
             result[k] = dict(v)  # convert to normal dict

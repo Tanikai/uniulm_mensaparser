@@ -2,9 +2,8 @@
 
 This project contains a parser for the canteen / mensa plans at
 Ulm University that are provided on the
-[Studierendenwerk Ulm website](https://studierendenwerk-ulm.de/essen-trinken/speiseplaene/).
-
-You can see the data in action on [](https://mensaplan2.anter.dev/)
+[Studierendenwerk Ulm website](https://studierendenwerk-ulm.de/essen-trinken/speiseplaene/). 
+You can see the data in action on the [**UUlm Mensaplan website**](https://mensaplan2.anter.dev/).
 
 The parsed data can be accessed here:
 [uulm.anter.dev/api/v1/canteens/ul_uni_sued](https://uulm.anter.dev/api/v1/canteens/ul_uni_sued)
@@ -18,8 +17,7 @@ your local machine for development and testing purposes.
 
 ### Prerequisites
 
-This project is tested and deployed with Python 3.9+. It might work with lower
-versions, but without guarantee.
+This project is tested and deployed with Python 3.9+. The dependencies require Python 3.7+.
 
 ### Integration into your own project
 
@@ -33,7 +31,7 @@ pip install git+https://github.com/Tanikai/uniulm_mensaparser@main
 
 After installing, you can use the parser like this:
 ```Python
-from uniulm_mensaparser import get_plan, Canteen, SimpleAdapter2, FsEtAdapter
+from uniulm_mensaparser import get_plan, Canteen, FsEtAdapter
 
 # use get_plan() to get plans of all supported canteens
 plan = get_plan()
@@ -60,10 +58,9 @@ pip install -r requirements.txt
 
 ## Built With
 
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) for 
-  extracting PDF links from the Studierendenwerk Ulm website
-- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) for parsing the canteen plan
-  PDF files
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to
+  extract PDF links from the Studierendenwerk Ulm website
+- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) to scrape the tables of the canteen plan PDFs
 
 ## Authors
 

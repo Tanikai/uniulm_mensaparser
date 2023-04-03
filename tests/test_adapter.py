@@ -52,4 +52,3 @@ class TestAdapter(TestCase):
         plans = Plan(meals=meal)
         adapter = FsEtAdapter()
         actual = json.dumps(adapter.convert_plans([plans]), indent=2)
-        print(actual)

@@ -67,7 +67,7 @@ def clean_line(line: str) -> str:
 
 
 def remove_allergens(line: str) -> str:
-    parentheses_re = "\(.*?\)"  # ? == greedy match
+    parentheses_re = r"\(.*?\)"  # ? == greedy match
     return re.sub(parentheses_re, "", line)
 
 
@@ -76,16 +76,16 @@ def build_meal_name(meal_lines: [str]) -> str:
 
     meal_name = remove_allergens(meal_name)
     # remove duplicate whitespaces
-    meal_name = re.sub("\s+", " ", meal_name)
+    meal_name = re.sub(r"\s+", r" ", meal_name)
     # if the next word begins with an uppercase letter, the - is part of
     # the word and should be kept
-    meal_name = re.sub("- ([A-Z])", "-\g<1>", meal_name)
+    meal_name = re.sub(r"- ([A-Z])", r"-\g<1>", meal_name)
     # if the next word begins with a lowercase letter, the - is used for
     # hyphenation and thus should be removed
-    meal_name = re.sub("- ([a-z])", "\g<1>", meal_name)
-    meal_name = re.sub(" ,", ",", meal_name)  # remove space before comma
-    # meal_name = re.sub(",(?=\S)", ", ", meal_name)  # add space after comma
-    meal_name = re.sub(",[^ ]", ",", meal_name)
+    meal_name = re.sub(r"- ([a-z])", r"\g<1>", meal_name)
+    meal_name = re.sub(r" ,", r",", meal_name)  # remove space before comma
+    meal_name = re.sub(r"(?<=,)(?=\S)", " ", meal_name)  # add space after comma
+    meal_name = re.sub(r" , ", r" ", meal_name)  # remove commas without content before or after
     meal_name = meal_name.strip()  # strip remaining whitespace before and after string
     return meal_name
 
@@ -235,6 +235,8 @@ class MensaNordParser(MensaParserIntf):
         self.wd = {}  # weekday to date dictionary
         self.weekday_text = {}
 
+        self.first_meal_prices = {}
+
     def get_opened_days(self) -> dict[str, bool]:
         open_status = {}
         for weekday, opened in self.is_open.items():
@@ -283,8 +285,8 @@ class MensaNordParser(MensaParserIntf):
         return self._parse_prices(prices)
 
     def _parse_prices(self, prices: str) -> dict[str, str]:
-        prices = re.sub("[^a-zA-Z0-9.,€ ]", "", prices)  # pdf contains weird codepoint so use allowlist for string
-        prices = re.sub("\s+", " ", prices)  # remove duplicate whitespace
+        prices = re.sub(r"[^a-zA-Z0-9.,€ ]", "", prices)  # pdf contains weird codepoint so use allowlist for string
+        prices = re.sub(r"\s+", " ", prices)  # remove duplicate whitespace
 
         split_prices = prices.split(" ")
 

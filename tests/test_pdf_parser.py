@@ -1,6 +1,6 @@
 from unittest import TestCase
 from uniulm_mensaparser.mensaparser import parse_plan_from_file
-from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string
+from uniulm_mensaparser.pdf_parser import DefaultMensaParser, MensaNordParser, parse_date_string, build_meal_name
 from uniulm_mensaparser.models import Weekday, Canteen, BistroMealCategory
 
 
@@ -49,3 +49,8 @@ class TestPdfParser(TestCase):
         self.assertEqual("2023-01-01", wd[Weekday.WEDNESDAY])
         self.assertEqual("2023-01-02", wd[Weekday.THURSDAY])
         self.assertEqual("2023-01-03", wd[Weekday.FRIDAY])
+
+    def test_build_meal_name(self):
+        meal_lines = ['Wiener Backhendl (14,', '34W)', 'Remouladensoße, (2, 9, 14, 24,', '27, 30, 35),',
+                      'Kartoffel-Gurkensalat (27)']
+        self.assertEqual('Wiener Backhendl Remouladensoße, Kartoffel-Gurkensalat', build_meal_name(meal_lines))

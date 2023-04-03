@@ -56,7 +56,7 @@ def parse_pdf_name(href: str) -> Plan:
     split_list = href.split("/")
     filename = split_list.pop()  # get last element of list -> filename
     filename = filename[:-4]  # remove .pdf
-    file_attrs = re.split('\s+', filename)
+    file_attrs = re.split(r"\s+", filename)
     file_attrs.pop()  # monthly mensa plan
 
     p = Plan(

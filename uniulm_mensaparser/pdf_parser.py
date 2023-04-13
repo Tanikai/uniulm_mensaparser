@@ -96,8 +96,9 @@ class DefaultMensaParser(MensaParserIntf):
         # @TODO SKIP EMPTY DAYS
         self.plan = []
         self.canteen = canteen
+        self.meal_category_order = Canteen.meal_category_order(canteen)
 
-        self.meal_category_counter = 1
+        self.meal_category_counter = 0
         self.meal_lines = []
         self.price_lines = []
 
@@ -155,7 +156,7 @@ class DefaultMensaParser(MensaParserIntf):
 
         column_text = self.weekday_text[weekday]
         self.meal_lines = []
-        self.meal_category_counter = 1
+        self.meal_category_counter = 0
 
         lines = re.split("\n+", column_text)
         for l in lines:
@@ -185,7 +186,7 @@ class DefaultMensaParser(MensaParserIntf):
     def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
         self.plan.append(Meal(
             name=build_meal_name(self.meal_lines),
-            category=DefaultMealCategory(self.meal_category_counter),
+            category=self.meal_category_order[self.meal_category_counter],
             date=self.wd[weekday],
             week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
             price_students=prices["students"],
@@ -222,8 +223,9 @@ class MensaNordParser(MensaParserIntf):
         # @TODO SKIP EMPTY DAYS
         self.plan = []
         self.canteen = canteen
+        self.meal_category_order = Canteen.meal_category_order(canteen)
 
-        self.meal_category_counter = 1
+        self.meal_category_counter = 0
         self.meal_lines = []
         self.price_lines = []
 
@@ -316,7 +318,7 @@ class MensaNordParser(MensaParserIntf):
         # setup
         column_text = self.weekday_text[weekday]
         self.meal_lines = []
-        self.meal_category_counter = 1
+        self.meal_category_counter = 0
         self.price_found = False
 
         lines = re.split("\n+", column_text)
@@ -342,7 +344,7 @@ class MensaNordParser(MensaParserIntf):
     def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
         self.plan.append(Meal(
             name=build_meal_name(self.meal_lines),
-            category=BistroMealCategory(self.meal_category_counter),
+            category=self.meal_category_order[self.meal_category_counter],
             date=self.wd[weekday],
             week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
             price_students=prices["students"],

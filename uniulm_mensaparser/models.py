@@ -151,6 +151,28 @@ class Canteen(Enum):
     def __str__(self):
         return ''
 
+    def meal_category_order(self):
+        if self == self.UL_UNI_Sued:
+            return [DefaultMealCategory.PRIMA_KLIMA,
+                    DefaultMealCategory.TOPF_UND_PFANNE,
+                    DefaultMealCategory.FLEISCH_UND_FISCH,
+                    DefaultMealCategory.SATTMACHER,
+                    DefaultMealCategory.EXTRA]
+        elif self == self.UL_UNI_West:
+            return [DefaultMealCategory.PRIMA_KLIMA,
+                    DefaultMealCategory.TOPF_UND_PFANNE,
+                    DefaultMealCategory.FLEISCH_UND_FISCH,
+                    DefaultMealCategory.SATTMACHER,
+                    DefaultMealCategory.EXTRA]
+        elif self == self.UL_UNI_Nord:
+            return [BistroMealCategory.PIZZA_I,
+                    BistroMealCategory.PIZZA_II,
+                    BistroMealCategory.PIZZA_III,
+                    BistroMealCategory.PASTA_I,
+                    BistroMealCategory.PASTA_II]
+        else:
+            return []
+
     @staticmethod
     def from_str(label: str):
         l = label.lower().strip()  # all smallercase and trim whitespace

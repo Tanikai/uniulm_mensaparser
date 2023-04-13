@@ -1,5 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass, field
+from .utils import date_format_iso, get_monday
+from datetime import datetime
 
 legend = {
     'S': "Schwein",
@@ -160,6 +162,10 @@ class Canteen(Enum):
             return Canteen.UL_UNI_Helmholtz
         elif "ul uni west" in l:
             return Canteen.UL_UNI_West
+        elif "ulm universitaet mensa uni sued" in l:
+            return Canteen.UL_UNI_Sued
+        elif "ulm universitaet cafeteria uni west" in l:
+            return Canteen.UL_UNI_West
         else:
             raise NotImplementedError("Unknown Canteen:" + l)
 
@@ -193,3 +199,23 @@ class Plan:
     week: str = ""
     opened_days: dict[str, bool] = field(default_factory=dict)
     meals: list[Meal] = field(default_factory=list)
+
+
+@dataclass
+class MaxmanagerRequest:
+    func: str = "make_spl"
+    locId: int = 1  # 1 is Mensa Süd
+    date: datetime = datetime.now()
+    lang: str = "de"
+    startThisWeek: datetime = get_monday()
+    startNextWeek: datetime = get_monday(1)
+
+    def generate_request_dictionary(self):
+        return {
+            "func": self.func,
+            "locId": str(self.locId),
+            "date": date_format_iso(self.date),
+            "lang": self.lang,
+            "startThisWeek": date_format_iso(self.startThisWeek),
+            "startNextWeek": date_format_iso(self.startNextWeek)
+        }

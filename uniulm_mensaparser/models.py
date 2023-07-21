@@ -65,16 +65,22 @@ class MealCategory(Enum):
     @staticmethod
     def from_str(label: str):
         l = label.lower().strip().replace("_", " ")  # all smallercase and trim whitespace
-        if "fleisch und fisch" in l:
+        if "fleisch" in l:
             return DefaultMealCategory.FLEISCH_UND_FISCH
         elif "prima klima" in l:
             return DefaultMealCategory.PRIMA_KLIMA
         elif "sattmacher" in l:
             return DefaultMealCategory.SATTMACHER
-        elif "topf und pfanne" in l:
+        elif "topf" in l:
             return DefaultMealCategory.TOPF_UND_PFANNE
         elif "extra" in l:
             return DefaultMealCategory.EXTRA
+        elif "beilagen" in l:
+            return DefaultMealCategory.BEILAGEN
+        elif "salat" in l:
+            return DefaultMealCategory.SALAT
+        elif "desserts" in l:
+            return DefaultMealCategory.DESSERTS
         elif "pizza iii" in l:
             return BistroMealCategory.PIZZA_III
         elif "pizza ii" in l:
@@ -91,16 +97,22 @@ class MealCategory(Enum):
     @staticmethod
     def pretty_print(value: str):
         l = value.lower().strip().replace("_", " ")
-        if "fleisch und fisch" in l:
+        if "fleisch" in l:
             return "Fleisch und Fisch"
         elif "prima klima" in l:
             return "Prima Klima"
         elif "sattmacher" in l:
             return "Sattmacher"
-        elif "topf und pfanne" in l:
+        elif "topf" in l:
             return "Topf und Pfanne"
         elif "extra" in l:
             return "Extra"
+        elif "beilagen" in l:
+            return "Beilagen"
+        elif "salat" in l:
+            return "Salat"
+        elif "desserts" in l:
+            return "Desserts"
         elif "pizza iii" in l:
             return "Pizza III"
         elif "pizza ii" in l:
@@ -130,6 +142,9 @@ class DefaultMealCategory(MealCategory):
     SATTMACHER = 3
     TOPF_UND_PFANNE = 4
     EXTRA = 5
+    BEILAGEN = 6
+    SALAT = 7
+    DESSERTS = 8
 
 
 class BistroMealCategory(MealCategory):
@@ -173,6 +188,14 @@ class Canteen(Enum):
         else:
             return []
 
+    def get_maxmanager_id(self) -> int:
+        if self == self.UL_UNI_Sued:
+            return 1
+        if self == self.UL_UNI_West:
+            return 2
+        else:
+            return -1
+
     @staticmethod
     def from_str(label: str):
         l = label.lower().strip()  # all smallercase and trim whitespace
@@ -212,7 +235,8 @@ class Meal:
     price_employees: str = ""
     price_others: str = ""
     canteen: Canteen = Canteen.NONE
-
+    allergy: str = ""
+    type: str = ""  # vegetarian / vegan / etc.
 
 @dataclass
 class Plan:
@@ -221,6 +245,7 @@ class Plan:
     week: str = ""
     opened_days: dict[str, bool] = field(default_factory=dict)
     meals: list[Meal] = field(default_factory=list)
+    first_date: datetime = 0
 
 
 @dataclass

@@ -25,6 +25,9 @@ def parse_date_string(line: str) -> dict[Weekday, str]:
     if len(dates) == 1:
         dates = line.split("-")
         offset = 1
+    if ("-" in dates[0]): # if first string is still not split
+        dates = dates[0].split("-")
+        offset = 1
     from_date = datetime.strptime(dates[0], "%d.%m.")
     until_date = datetime.strptime(dates[offset], "%d.%m.%Y")
 
@@ -114,7 +117,7 @@ class DefaultMensaParser(MensaParserIntf):
         open_status = {}
         for weekday, opened in self.is_open.items():
             open_status[self.wd[weekday]] = opened
-            
+
         return open_status
 
     def _scrape_weekday_column_text(self, page: fitz.Page):

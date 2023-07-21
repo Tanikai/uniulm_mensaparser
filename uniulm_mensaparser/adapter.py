@@ -1,3 +1,4 @@
+from typing import List
 from .models import MealCategory, Meal, Plan
 from abc import abstractmethod
 from collections import defaultdict
@@ -15,7 +16,7 @@ class PlanAdapter:
     """
 
     @abstractmethod
-    def convert_plans(self, plans: [Plan]) -> dict:
+    def convert_plans(self, plans: List[Plan]) -> dict:
         pass
 
 
@@ -25,7 +26,7 @@ class FsEtAdapter(PlanAdapter):
     See https://mensaplan.fs-et.de/data/mensaplan.json for JSON layout.
     """
 
-    def convert_plans(self, plans: [Plan]) -> dict:
+    def convert_plans(self, plans: List[Plan]) -> dict:
         result = {"weeks": []}
 
         for p in plans:
@@ -97,7 +98,7 @@ class FsEtAdapter(PlanAdapter):
 
 class SimpleAdapter2(PlanAdapter):
 
-    def convert_plans(self, plans: [Plan]) -> dict:
+    def convert_plans(self, plans: List[Plan]) -> dict:
         result = recursively_default_dict()
 
         for p in plans:

@@ -10,6 +10,7 @@ def recursively_default_dict():
 
 # Strategy Pattern
 
+
 class PlanAdapter:
     """
     Interface for Mensa Plan adapter.
@@ -37,12 +38,15 @@ class FsEtAdapter(PlanAdapter):
                 if opened:
                     continue
 
-                self._add_meal(result, Meal(
-                    name="[closed]",
-                    week_number=int(p.week[2:]),
-                    date=weekday_str,
-                    canteen=p.canteen
-                ))
+                self._add_meal(
+                    result,
+                    Meal(
+                        name="[closed]",
+                        week_number=int(p.week[2:]),
+                        date=weekday_str,
+                        canteen=p.canteen,
+                    ),
+                )
 
         return result
 
@@ -76,28 +80,21 @@ class FsEtAdapter(PlanAdapter):
 
         # special case to add empty day to plan
         if meal.name == "[closed]":
-            day[canteen] = {
-                "meals": [],
-                "open": False
-            }
+            day[canteen] = {"meals": [], "open": False}
             return
 
         meal_dict = {
             "category": MealCategory.pretty_print(str(meal.category)),
             "meal": meal.name,
-            "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}"
+            "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}",
         }
         if canteen not in day:
-            day[canteen] = {
-                "meals": [],
-                "open": True
-            }
+            day[canteen] = {"meals": [], "open": True}
 
         day[canteen]["meals"].append(meal_dict)
 
 
 class SimpleAdapter2(PlanAdapter):
-
     def convert_plans(self, plans: List[Plan]) -> dict:
         result = recursively_default_dict()
 
@@ -120,19 +117,20 @@ class SimpleAdapter2(PlanAdapter):
     def _add_meal(self, result: dict, meal: Meal):
         mensa_name = meal.canteen.name.lower()
         result[mensa_name].setdefault(meal.date, [])
-        result[mensa_name][meal.date].append({
-            "name": meal.name,
-            "category": MealCategory.pretty_print(meal.category.name),
-            "prices": {
-                "students": meal.price_students,
-                "employees": meal.price_employees,
-                "others": meal.price_others,
+        result[mensa_name][meal.date].append(
+            {
+                "name": meal.name,
+                "category": MealCategory.pretty_print(meal.category.name),
+                "prices": {
+                    "students": meal.price_students,
+                    "employees": meal.price_employees,
+                    "others": meal.price_others,
+                },
             }
-        })
+        )
 
 
 class SimpleAdapter(PlanAdapter):
-
     def convert_plans(self, plans: [Plan]) -> dict:
         result = {}
 
@@ -152,13 +150,11 @@ class SimpleAdapter(PlanAdapter):
                 meals = day_dict["meals"]
                 for meal_category in day_dict["meals"]:
                     current_meal = meals[meal_category]
-                    if ("name" not in current_meal) or \
-                            ("prices" not in current_meal):
+                    if ("name" not in current_meal) or ("prices" not in current_meal):
                         continue
                     out = {
                         "name": current_meal["name"],
-                        "category": MealCategory.pretty_print(
-                            meal_category),
+                        "category": MealCategory.pretty_print(meal_category),
                         "prices": dict(current_meal["prices"]),
                     }
                     mensa_dict[date].append(out)

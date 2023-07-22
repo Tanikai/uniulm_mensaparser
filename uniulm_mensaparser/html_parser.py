@@ -15,7 +15,6 @@ class SoupMealCategory:
 
 
 class HtmlMensaParser:
-
     def __init__(self):
         pass
 
@@ -31,7 +30,9 @@ class HtmlMensaParser:
 
         meal_container: Tag = soup.div
 
-        categories: List[SoupMealCategory] = self._split_categories(meal_container.contents)
+        categories: List[SoupMealCategory] = self._split_categories(
+            meal_container.contents
+        )
         for cat in categories:
             meals += self._parse_category(cat)
 
@@ -47,62 +48,71 @@ class HtmlMensaParser:
 
         return meals
 
-    def _split_categories(self, mealCategories: List[Tag]) -> List[SoupMealCategory]:
+    def _split_categories(self, meal_categories: List[Tag]) -> List[SoupMealCategory]:
         result: List[SoupMealCategory] = []
 
-        while len(mealCategories) > 0:
-            categoryDiv = mealCategories.pop(0)
-            if "gruppenkopf" not in categoryDiv.attrs["class"]:
+        while len(meal_categories) > 0:
+            category_div = meal_categories.pop(0)
+            if "gruppenkopf" not in category_div.attrs["class"]:
                 raise Exception("invalid input")
-            mealDivs = []
+            meal_divs = []
 
-            while len(mealCategories) > 0 and not "gruppenkopf" in mealCategories[0].attrs["class"]:
-                mealDivs.append(mealCategories.pop(0))
+            while (
+                len(meal_categories) > 0
+                and "gruppenkopf" not in meal_categories[0].attrs["class"]
+            ):
+                meal_divs.append(meal_categories.pop(0))
 
             result.append(
                 SoupMealCategory(
-                    headerDiv=categoryDiv,
-                    mealDivs=mealDivs,
+                    headerDiv=category_div,
+                    mealDivs=meal_divs,
                 )
             )
 
         return result
 
     def _parse_category(self, category: SoupMealCategory) -> List[Meal]:
-        meal_category = MealCategory.from_str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
+        meal_category = MealCategory.from_str(
+            str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
+        )
 
         meals = []
 
         for mealDiv in category.mealDivs:
             allergy = mealDiv.attrs["lang"]
-            mealBlock = mealDiv.find("div", {"class": "visible-xs-block"})  # first block due to
-            fltlDivs = mealBlock.findAll("div", {"class": "fltl"})
+            meal_block = mealDiv.find(
+                "div", {"class": "visible-xs-block"}
+            )  # first block due to
+            fltl_divs = meal_block.findAll("div", {"class": "fltl"})
 
-            mealInfo = fltlDivs[1]
-            mealName = mealInfo.contents[0].strip()
+            meal_info = fltl_divs[1]
+            meal_name = meal_info.contents[0].strip()
 
-            if len(fltlDivs[3].contents) > 0:
-                mealTypeImg = fltlDivs[3].contents[0]
-                mealType = mealTypeImg.attrs["title"]
+            meal_type = ""
+            if len(fltl_divs[3].contents) > 0:
+                meal_type_img = fltl_divs[3].contents[0]
+                meal_type = meal_type_img.attrs["title"]
 
-            priceDiv = mealBlock.find("span", {"class": "preisgramm"}).parent
-            priceText = priceDiv.text
-            price_students, price_emp, price_others = self._parse_prices(priceText)
+            price_div = meal_block.find("span", {"class": "preisgramm"}).parent
+            price_text = price_div.text
+            price_students, price_emp, price_others = self._parse_prices(price_text)
 
-            meals.append(Meal(
-                name=mealName,
-                category=meal_category,
-                allergy=allergy,
-                type=mealType,
-                price_students=price_students,
-                price_employees=price_emp,
-                price_others=price_others
-            ))
+            meals.append(
+                Meal(
+                    name=meal_name,
+                    category=meal_category,
+                    allergy=allergy,
+                    type=meal_type,
+                    price_students=price_students,
+                    price_employees=price_emp,
+                    price_others=price_others,
+                )
+            )
 
         return meals
 
-
     def _parse_prices(self, price: str) -> Tuple[str, str, str]:
-        cleaned: str = price.replace(u'\xa0', ' ').strip(" €")
+        cleaned: str = price.replace("\xa0", " ").strip(" €")
         split = list(map(lambda price: price.strip() + " €", cleaned.split("|")))
         return split[0], split[1], split[2]

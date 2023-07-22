@@ -2,13 +2,36 @@ from .adapter import PlanAdapter
 from .html_parser import HtmlMensaParser
 from .pdf_parser import MensaParserIntf, DefaultMensaParser, MensaNordParser
 from .models import Canteen, Meal, Plan
-from .studierendenwerk_scraper import get_current_canteen_urls, get_maxmanager_website
+from .studierendenwerk_scraper import get_current_pdf_urls, get_maxmanager_website
 import requests
 import fitz
-from typing import List
+from typing import List, Set, Type
 from datetime import datetime, timedelta
 
 from .utils import date_format_iso
+
+
+def get_plans_for_canteens(
+    canteens: Set[Canteen], adapter_class: Type[PlanAdapter]
+) -> dict:
+    """
+    This is the main function to get mensa plans.
+    """
+    plans: List[Plan] = get_current_pdf_urls(canteens)
+
+    def parseplan(plan: Plan) -> Plan:
+        if plan.canteen in {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}:
+            return parse_maxmanager_plan(plan)
+        else:
+            parser = create_parser(plan.canteen)
+            plan.meals = parse_plan_from_url(plan.url, parser)
+            plan.opened_days = parser.get_opened_days()
+            return plan
+
+    plans = list(map(parseplan, plans))
+    adapter = adapter_class()
+    converted = adapter.convert_plans(plans)
+    return converted
 
 
 def parse_plan_from_url(pdf_url: str, parser: MensaParserIntf) -> [Meal]:
@@ -31,27 +54,6 @@ def create_parser(c: Canteen) -> MensaParserIntf:
         return MensaNordParser(c)
     else:
         raise ValueError("unknown canteen")
-
-
-def get_plans_for_canteens(canteens: {Canteen}, adapter_class=PlanAdapter) -> dict:
-    """
-    This is the main function to get mensa plans.
-    """
-    plans: List[Plan] = get_current_canteen_urls(canteens)
-
-    def parseplan(plan: Plan) -> Plan:
-        if plan.canteen in {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}:
-            return parse_maxmanager_plan(plan)
-        else:
-            parser = create_parser(plan.canteen)
-            plan.meals = parse_plan_from_url(plan.url, parser)
-            plan.opened_days = parser.get_opened_days()
-            return plan
-
-    plans = list(map(parseplan, plans))
-    adapter = adapter_class()
-    converted = adapter.convert_plans(plans)
-    return converted
 
 
 def parse_maxmanager_plan(plan: Plan) -> Plan:

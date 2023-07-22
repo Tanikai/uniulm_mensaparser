@@ -25,7 +25,7 @@ def parse_date_string(line: str) -> dict[Weekday, str]:
     if len(dates) == 1:
         dates = line.split("-")
         offset = 1
-    if ("-" in dates[0]): # if first string is still not split
+    if "-" in dates[0]:  # if first string is still not split
         dates = dates[0].split("-")
         offset = 1
     from_date = datetime.strptime(dates[0], "%d.%m.")
@@ -88,12 +88,17 @@ def build_meal_name(meal_lines: [str]) -> str:
     meal_name = re.sub(r"- ([a-z])", r"\g<1>", meal_name)
     meal_name = re.sub(r" ,", r",", meal_name)  # remove space before comma
     meal_name = re.sub(r"(?<=,)(?=\S)", " ", meal_name)  # add space after comma
-    meal_name = re.sub(r" , ", r" ", meal_name)  # remove commas without content before or after
+    meal_name = re.sub(
+        r" , ", r" ", meal_name
+    )  # remove commas without content before or after
     meal_name = meal_name.strip()  # strip remaining whitespace before and after string
     return meal_name
 
 
 class DefaultMensaParser(MensaParserIntf):
+    """
+    deprecated, use html_parser instead
+    """
 
     def __init__(self, canteen: Canteen):
         # @TODO SKIP EMPTY DAYS
@@ -165,11 +170,14 @@ class DefaultMensaParser(MensaParserIntf):
         for l in lines:
             self._ingest_column_line(l, weekday)
 
-    def _ingest_column_line(self, line: str, weekday: Weekday):
+    def _ingest_column_line(self, line: str, weekday: Weekday) -> None:
         """
         Parses plan lines by column (i.e. by day)
-        :param line:
-        :return: Exit
+        Args:
+            line: Current line
+            weekday: Current weekday
+
+        Returns: None
         """
         l = clean_line(line)
 
@@ -187,16 +195,20 @@ class DefaultMensaParser(MensaParserIntf):
         self.meal_lines.append(l)
 
     def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
-        self.plan.append(Meal(
-            name=build_meal_name(self.meal_lines),
-            category=self.meal_category_order[self.meal_category_counter],
-            date=self.wd[weekday],
-            week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
-            price_students=prices["students"],
-            price_employees=prices["employees"],
-            price_others=prices["others"],
-            canteen=self.canteen
-        ))
+        self.plan.append(
+            Meal(
+                name=build_meal_name(self.meal_lines),
+                category=self.meal_category_order[self.meal_category_counter],
+                date=self.wd[weekday],
+                week_number=int(
+                    datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")
+                ),
+                price_students=prices["students"],
+                price_employees=prices["employees"],
+                price_others=prices["others"],
+                canteen=self.canteen,
+            )
+        )
         self.meal_category_counter += 1
         self.meal_lines = []
 
@@ -206,11 +218,14 @@ class DefaultMensaParser(MensaParserIntf):
 
     def _is_prices(self, line: str) -> bool:
         """
-        only price lines contain a pipe '|'
-        :param line:
-        :return:
+        Determines whether the line is the price line or not.
+        Args:
+            line: Current line
+
+        Returns: True if current line contains prices, false if not
+
         """
-        return "|" in line  #
+        return "|" in line
 
     def _parse_prices(self, line: str) -> dict:
         p = {}
@@ -290,7 +305,9 @@ class MensaNordParser(MensaParserIntf):
         return self._parse_prices(prices)
 
     def _parse_prices(self, prices: str) -> dict[str, str]:
-        prices = re.sub(r"[^a-zA-Z0-9.,€ ]", "", prices)  # pdf contains weird codepoint so use allowlist for string
+        prices = re.sub(
+            r"[^a-zA-Z0-9.,€ ]", "", prices
+        )  # pdf contains weird codepoint so use allowlist for string
         prices = re.sub(r"\s+", " ", prices)  # remove duplicate whitespace
 
         split_prices = prices.split(" ")
@@ -327,7 +344,9 @@ class MensaNordParser(MensaParserIntf):
         lines = re.split("\n+", column_text)
         while "Pizza" not in lines[0]:
             lines.pop(0)
-        lines.append("placeholder")  # add line at end so that parser can finish last meal
+        lines.append(
+            "placeholder"
+        )  # add line at end so that parser can finish last meal
         first_meal = True
         for l in lines:
             l = clean_line(l)
@@ -345,27 +364,34 @@ class MensaNordParser(MensaParserIntf):
         return True
 
     def _add_meal(self, weekday: Weekday, prices: dict[str, str]):
-        self.plan.append(Meal(
-            name=build_meal_name(self.meal_lines),
-            category=self.meal_category_order[self.meal_category_counter],
-            date=self.wd[weekday],
-            week_number=int(datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")),
-            price_students=prices["students"],
-            price_employees=prices["employees"],
-            price_others=prices["others"],
-            canteen=self.canteen
-        ))
+        self.plan.append(
+            Meal(
+                name=build_meal_name(self.meal_lines),
+                category=self.meal_category_order[self.meal_category_counter],
+                date=self.wd[weekday],
+                week_number=int(
+                    datetime.strptime(self.wd[weekday], "%Y-%m-%d").strftime("%V")
+                ),
+                price_students=prices["students"],
+                price_employees=prices["employees"],
+                price_others=prices["others"],
+                canteen=self.canteen,
+            )
+        )
 
         self.meal_category_counter += 1
         self.meal_lines = []
         self.price_lines = []
 
-    def _ingest_column_line(self, line: str, weekday: Weekday):
+    def _ingest_column_line(self, line: str, weekday: Weekday) -> None:
         """
-       Parses plan lines by column (i.e. by day)
-       :param line:
-       :return: Exit
-       """
+        Parses plan lines by column (i.e. by day)
+        Args:
+            line: Current line
+            weekday: Current weekday
+
+        Returns: None
+        """
         l = line
         if l == "":
             return  # skip line if empty

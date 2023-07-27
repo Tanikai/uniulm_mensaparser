@@ -1,10 +1,11 @@
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, NavigableString
 from uniulm_mensaparser.models import Meal, MealCategory, Canteen
 from typing import List, Tuple
 from dataclasses import dataclass
 
 from datetime import datetime
 
+from uniulm_mensaparser.pdf_parser import build_meal_name
 from uniulm_mensaparser.utils import date_format_iso
 
 
@@ -87,7 +88,13 @@ class HtmlMensaParser:
             fltl_divs = meal_block.findAll("div", {"class": "fltl"})
 
             meal_info = fltl_divs[1]
-            meal_name = meal_info.contents[0].strip()
+            meal_name_parts = list(
+                filter(
+                    lambda child: isinstance(child, NavigableString), meal_info.contents
+                )
+            )
+
+            meal_name = build_meal_name(meal_name_parts)
 
             meal_type = ""
             if len(fltl_divs[3].contents) > 0:

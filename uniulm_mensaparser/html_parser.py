@@ -120,6 +120,6 @@ class HtmlMensaParser:
         return meals
 
     def _parse_prices(self, price: str) -> Tuple[str, str, str]:
-        cleaned: str = price.replace("\xa0", " ").strip(" €")
+        cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
         split = list(map(lambda price: price.strip() + " €", cleaned.split("|")))
         return split[0], split[1], split[2]

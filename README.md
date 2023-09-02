@@ -62,6 +62,12 @@ pip install -r requirements.txt
   extract PDF links from the Studierendenwerk Ulm website
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) to scrape the tables of the canteen plan PDFs
 
+## Get new Test Data of MaxManaager
+
+```bash
+curl -X POST 'https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc.php?func=make_spl&locId=1&date=2023-07-20&lang=de&startThisWeek=2023-07-17&startNextWeek=2023-07-24'
+```
+
 ## Authors
 
 - **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Mastodon](https://hachyderm.io/@Tanikai)

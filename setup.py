@@ -22,9 +22,5 @@ setuptools.setup(
     ],
     packages=["uniulm_mensaparser"],
     python_requires=">=3.7",
-    install_requires=[
-        "beautifulsoup4",
-        "pymupdf",
-        "requests"
-    ]
+    install_requires=["beautifulsoup4", "pymupdf", "aiohttp"],
 )

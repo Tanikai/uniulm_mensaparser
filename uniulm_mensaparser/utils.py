@@ -1,5 +1,5 @@
-import urllib.request
 from datetime import datetime, timedelta
+import aiohttp
 
 
 def get_monday(week_offset=0):
@@ -12,7 +12,6 @@ def date_format_iso(date: datetime):
     return date.strftime("%Y-%m-%d")
 
 
-def get_website(url: str) -> str:
-    with urllib.request.urlopen(url) as response:
-        source = response.read().decode("utf-8")
-        return source
+async def fetch(session: aiohttp.ClientSession, url: str) -> str:
+    async with session.get(url) as resp:
+        return await resp.text()

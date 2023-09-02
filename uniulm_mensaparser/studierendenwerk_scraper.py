@@ -1,12 +1,12 @@
 from bs4 import BeautifulSoup
 import re
 from .models import Canteen, Plan, MaxmanagerRequest
-import requests
 from datetime import datetime, timedelta
 from typing import List, Set
 from html import unescape
+import aiohttp
 
-from .utils import get_website
+from .utils import fetch
 
 """
 This module is used to get the links to the PDF files.
@@ -16,11 +16,13 @@ BASE_URL = "https://studierendenwerk-ulm.de/essen-trinken/speiseplaene"
 MAXMANAGER_URL = "https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc.php"
 
 
-def get_current_pdf_urls(canteens: Set[Canteen]) -> List[Plan]:
+async def get_current_pdf_urls(
+    session: aiohttp.ClientSession, canteens: Set[Canteen]
+) -> List[Plan]:
     def ulm_filter(plan):
         return plan.canteen in canteens
 
-    source = _get_studierendenwerk_html()
+    source = await fetch(session, BASE_URL)
     plans: List[Plan] = _scrape_legacy_pdf_urls(source)  # parse legacy links
 
     plans = list(filter(ulm_filter, plans))
@@ -74,15 +76,9 @@ def _get_canteens_with_updated_api(canteens: Set[Canteen]) -> List[Plan]:
     return result
 
 
-def _get_studierendenwerk_html() -> str:
-    """
-    Loads and returns the current Studierendenwerk Ulm website.
-    Returns: HTML source code
-    """
-    return get_website(BASE_URL)
-
-
-def get_maxmanager_website(locId: int = 1, date: datetime = datetime.now()) -> str:
+async def get_maxmanager_website(
+    session: aiohttp.ClientSession, locId: int = 1, date: datetime = datetime.now()
+) -> str:
     """
     Returns the HTML canteen plan for the selected canteen and date.
     Args:
@@ -98,8 +94,9 @@ def get_maxmanager_website(locId: int = 1, date: datetime = datetime.now()) -> s
     form_data.locId = locId
     form_data.date = date
     request_dict = form_data.generate_request_dictionary()
-    resp = requests.post(f"{MAXMANAGER_URL}", data=request_dict)
-    return unescape(resp.content.decode("utf-8"))
+    async with session.post(MAXMANAGER_URL, data=request_dict) as resp:
+        data = await resp.text()
+        return data
 
 
 def _scrape_legacy_pdf_urls(source: str) -> List[Plan]:

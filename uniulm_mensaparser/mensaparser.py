@@ -1,43 +1,54 @@
+import asyncio
+
 from .adapter import PlanAdapter
 from .html_parser import HtmlMensaParser
 from .pdf_parser import MensaParserIntf, DefaultMensaParser, MensaNordParser
 from .models import Canteen, Meal, Plan
 from .studierendenwerk_scraper import get_current_pdf_urls, get_maxmanager_website
-import requests
 import fitz
 from typing import List, Set, Type
 from datetime import datetime, timedelta
+import aiohttp
 
 from .utils import date_format_iso
 
 
-def get_meals_for_canteens(canteens: Set[Canteen]) -> List[Plan]:
+async def get_meals_for_canteens(canteens: Set[Canteen]) -> List[Plan]:
     """
     This is the main function to get mensa plans.
     """
-    plans: List[Plan] = get_current_pdf_urls(canteens)
+    async with aiohttp.ClientSession() as session:
+        plans: List[Plan] = await get_current_pdf_urls(session, canteens)
 
-    def _parse_plan(plan: Plan) -> Plan:
-        if plan.canteen in {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}:
-            return parse_maxmanager_plan(plan)
-        else:
-            parser = create_parser(plan.canteen)
-            plan.meals = parse_plan_from_url(plan.url, parser)
-            plan.opened_days = parser.get_opened_days()
-            return plan
+        async def _parse_plan(plan: Plan) -> Plan:
+            if plan.canteen in {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}:
+                return await parse_maxmanager_plan(session, plan)
+            else:
+                parser = create_parser(plan.canteen)
+                plan.meals = await parse_plan_from_url(session, plan.url, parser)
+                plan.opened_days = parser.get_opened_days()
+                return plan
 
-    return list(map(_parse_plan, plans))
+        tasks: List[asyncio.Task] = []
+        for p in plans:
+            tasks.append(asyncio.create_task(_parse_plan(p)))
+
+        results = await asyncio.gather(*tasks)
+        return results
 
 
-def format_meals(meals, adapter_class: Type[PlanAdapter]):
+def format_meals(meals: List[Plan], adapter_class: Type[PlanAdapter]):
     adapter = adapter_class()
     converted = adapter.convert_plans(meals)
     return converted
 
 
-def parse_plan_from_url(pdf_url: str, parser: MensaParserIntf) -> [Meal]:
-    with requests.get(pdf_url) as data:
-        document = fitz.open("pdf", data.content)
+async def parse_plan_from_url(
+    session: aiohttp.ClientSession, pdf_url: str, parser: MensaParserIntf
+) -> [Meal]:
+    async with session.get(pdf_url) as response:
+        data = await response.read()
+        document = fitz.open("pdf", data)
         return parser.parse_plan(document[0])
 
 
@@ -57,12 +68,12 @@ def create_parser(c: Canteen) -> MensaParserIntf:
         raise ValueError("unknown canteen")
 
 
-def parse_maxmanager_plan(plan: Plan) -> Plan:
+async def parse_maxmanager_plan(session: aiohttp.ClientSession, plan: Plan) -> Plan:
     weekdates = _get_weekdates(plan.first_date)
 
     meals = []
     for date in weekdates:
-        datemeals = get_meals_for_date(date, plan.canteen)
+        datemeals = await get_meals_for_date(session, date, plan.canteen)
         if len(datemeals) == 0:
             plan.opened_days[date_format_iso(date)] = False
         if len(datemeals) > 0:
@@ -74,9 +85,11 @@ def parse_maxmanager_plan(plan: Plan) -> Plan:
     return plan
 
 
-def get_meals_for_date(date: datetime, canteen: Canteen) -> List[Meal]:
+async def get_meals_for_date(
+    session: aiohttp.ClientSession, date: datetime, canteen: Canteen
+) -> List[Meal]:
     p = HtmlMensaParser()
-    source = get_maxmanager_website(canteen.get_maxmanager_id(), date)
+    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), date)
     return p.parse_plan(source, date, canteen)
 
 

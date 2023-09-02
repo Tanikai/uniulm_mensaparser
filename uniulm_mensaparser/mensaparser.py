@@ -11,15 +11,13 @@ from datetime import datetime, timedelta
 from .utils import date_format_iso
 
 
-def get_plans_for_canteens(
-    canteens: Set[Canteen], adapter_class: Type[PlanAdapter]
-) -> dict:
+def get_meals_for_canteens(canteens: Set[Canteen]) -> List[Plan]:
     """
     This is the main function to get mensa plans.
     """
     plans: List[Plan] = get_current_pdf_urls(canteens)
 
-    def parseplan(plan: Plan) -> Plan:
+    def _parse_plan(plan: Plan) -> Plan:
         if plan.canteen in {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}:
             return parse_maxmanager_plan(plan)
         else:
@@ -28,9 +26,12 @@ def get_plans_for_canteens(
             plan.opened_days = parser.get_opened_days()
             return plan
 
-    plans = list(map(parseplan, plans))
+    return list(map(_parse_plan, plans))
+
+
+def format_meals(meals, adapter_class: Type[PlanAdapter]):
     adapter = adapter_class()
-    converted = adapter.convert_plans(plans)
+    converted = adapter.convert_plans(meals)
     return converted
 
 

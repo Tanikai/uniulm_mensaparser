@@ -1,6 +1,6 @@
 from .models import Canteen
 from .adapter import SimpleAdapter2, PlanAdapter
-from .mensaparser import get_plans_for_canteens
+from .mensaparser import get_meals_for_canteens, format_meals
 from typing import Set
 
 """
@@ -18,10 +18,15 @@ def get_plan(canteens: Set[Canteen] = None, adapter_class: PlanAdapter = None) -
     Returns: Formatted canteen plan
 
     """
-    if canteens is None:
-        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West, Canteen.UL_UNI_Nord}
+    unformatted_meals = get_unformatted_plan(canteens)
 
     if adapter_class is None:
         adapter_class = SimpleAdapter2
 
-    return get_plans_for_canteens(canteens, adapter_class)
+    return format_meals(canteens, adapter_class)
+
+def get_unformatted_plan(canteens: Set[Canteen] = None):
+    if canteens is None:
+        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West, Canteen.UL_UNI_Nord}
+
+    return get_meals_for_canteens(canteens)

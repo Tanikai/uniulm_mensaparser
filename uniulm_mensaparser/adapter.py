@@ -87,6 +87,8 @@ class FsEtAdapter(PlanAdapter):
             "category": MealCategory.pretty_print(str(meal.category)),
             "meal": meal.name,
             "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}",
+            "type": meal.type,
+            "allergy": list(meal.allergy_ids),
         }
         if canteen not in day:
             day[canteen] = {"meals": [], "open": True}
@@ -126,6 +128,8 @@ class SimpleAdapter2(PlanAdapter):
                     "employees": meal.price_employees,
                     "others": meal.price_others,
                 },
+                "type": meal.type,
+                "allergy": list(meal.allergy_ids),
             }
         )
 

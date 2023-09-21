@@ -3,7 +3,6 @@ import re
 from .models import Canteen, Plan, MaxmanagerRequest
 from datetime import datetime, timedelta
 from typing import List, Set
-from html import unescape
 import aiohttp
 
 from .utils import fetch

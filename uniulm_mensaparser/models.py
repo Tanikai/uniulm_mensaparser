@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
 from datetime import datetime
+from typing import Set
 
 legend = {
     "S": "Schwein",
@@ -237,13 +238,13 @@ class Meal:
     name: str = ""
     category: MealCategory = DefaultMealCategory.NONE
     date: str = ""
-    week_number: int = -1
+    week_number: int = -1 # can be derived from the date but included for easier use of data
     price_students: str = ""
     price_employees: str = ""
     price_others: str = ""
     canteen: Canteen = Canteen.NONE
-    allergy: str = ""
-    type: str = ""  # vegetarian / vegan / etc.
+    allergy_ids: set = field(default_factory=set) # e.g. 26, 34W, 27
+    type: str = ""  # vegetarian / vegan / etc. -> parsed from used icon
 
 
 @dataclass

@@ -1,3 +1,5 @@
+import re
+
 from bs4 import BeautifulSoup, Tag, NavigableString
 from uniulm_mensaparser.models import Meal, MealCategory, Canteen
 from typing import List, Tuple
@@ -74,6 +76,14 @@ class HtmlMensaParser:
         return result
 
     def _parse_category(self, category: SoupMealCategory) -> List[Meal]:
+        """
+        Parses a single meal from the day.
+        Args:
+            category: The souped div from the HTML document.
+
+        Returns:
+
+        """
         meal_category = MealCategory.from_str(
             str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
         )
@@ -81,7 +91,11 @@ class HtmlMensaParser:
         meals = []
 
         for mealDiv in category.mealDivs:
+            # Parse allergy information
             allergy = mealDiv.attrs["lang"]
+            allergy_ids = set(allergy.split(","))
+
+            # Get meal string
             meal_block = mealDiv.find(
                 "div", {"class": "visible-xs-block"}
             )  # first block due to
@@ -94,12 +108,14 @@ class HtmlMensaParser:
                 )
             )
 
+            # Clean up and concatenate partial strings of meal name
             meal_name = build_meal_name(meal_name_parts)
 
+            # Get meal type (vegetarian, vegan, ...)
             meal_type = ""
-            if len(fltl_divs[3].contents) > 0:
-                meal_type_img = fltl_divs[3].contents[0]
-                meal_type = meal_type_img.attrs["title"]
+            meal_type_icon = mealDiv.find("img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}) # not bio
+            if meal_type_icon is not None:
+                meal_type = meal_type_icon.attrs["title"]
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text
@@ -109,7 +125,7 @@ class HtmlMensaParser:
                 Meal(
                     name=meal_name,
                     category=meal_category,
-                    allergy=allergy,
+                    allergy_ids=allergy_ids,
                     type=meal_type,
                     price_students=price_students,
                     price_employees=price_emp,

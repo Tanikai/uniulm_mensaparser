@@ -34,7 +34,7 @@ async def get_meals_for_canteens(canteens: Set[Canteen]) -> List[Plan]:
             tasks.append(asyncio.create_task(_parse_plan(p)))
 
         results = await asyncio.gather(*tasks)
-        return results
+    return results
 
 
 def format_meals(meals: List[Plan], adapter_class: Type[PlanAdapter]):
@@ -69,6 +69,15 @@ def create_parser(c: Canteen) -> MensaParserIntf:
 
 
 async def parse_maxmanager_plan(session: aiohttp.ClientSession, plan: Plan) -> Plan:
+    """
+    Parses the current canteen plan from the MaxManager CMS endpoint.
+    Args:
+        session: The session which should be used to issue HTTP requests.
+        plan: Information about the canteen, weekdays, and opened days
+
+    Returns: Plan from argument with updated values
+
+    """
     weekdates = _get_weekdates(plan.first_date)
 
     meals = []

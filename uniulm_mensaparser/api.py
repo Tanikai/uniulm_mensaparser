@@ -1,7 +1,7 @@
 from .models import Canteen
 from .adapter import SimpleAdapter2, PlanAdapter
 from .mensaparser import get_meals_for_canteens, format_meals
-from typing import Set
+from typing import Set, Type
 import asyncio
 
 """
@@ -9,7 +9,7 @@ Library API
 """
 
 
-def get_plan(canteens: Set[Canteen] = None, adapter_class: PlanAdapter = None) -> dict:
+def get_plan(canteens: Set[Canteen] = None, adapter_class: Type[PlanAdapter] = None) -> dict:
     """
     Returns the Ulm University canteen plan for this and next week.
     Args:

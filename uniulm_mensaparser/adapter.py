@@ -88,6 +88,7 @@ class FsEtAdapter(PlanAdapter):
             "meal": meal.name,
             "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}",
             "type": meal.type,
+            "types": meal.types,
             "allergy": list(meal.allergy_ids),
         }
         if canteen not in day:
@@ -129,6 +130,7 @@ class SimpleAdapter2(PlanAdapter):
                     "others": meal.price_others,
                 },
                 "type": meal.type,
+                "types": meal.types,
                 "allergy": list(meal.allergy_ids),
             }
         )

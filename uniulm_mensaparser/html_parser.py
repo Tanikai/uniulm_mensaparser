@@ -34,7 +34,7 @@ class HtmlMensaParser:
         meal_container: Tag = soup.div
 
         categories: List[SoupMealCategory] = self._split_categories(
-            meal_container.contents
+            meal_container.findChildren("div", recursive=False)
         )
         for cat in categories:
             meals += self._parse_category(cat)
@@ -111,11 +111,14 @@ class HtmlMensaParser:
             # Clean up and concatenate partial strings of meal name
             meal_name = build_meal_name(meal_name_parts)
 
-            # Get meal type (vegetarian, vegan, ...)
+            # Get meal type (vegetarian, vegan, ...) -> there can be multiple meal types per meal
             meal_type = ""
-            meal_type_icon = mealDiv.find("img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}) # not bio
-            if meal_type_icon is not None:
-                meal_type = meal_type_icon.attrs["title"]
+            meal_types = []
+            meal_type_icons = mealDiv.findAll("img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}) # not bio
+            print(meal_type_icons)
+            if meal_type_icons is not None and not len(meal_type_icons) == 0:
+                meal_type = meal_type_icons[0].attrs["title"]
+                meal_types = list(map(lambda icon: icon.attrs["title"], meal_type_icons))
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text
@@ -127,6 +130,7 @@ class HtmlMensaParser:
                     category=meal_category,
                     allergy_ids=allergy_ids,
                     type=meal_type,
+                    types=meal_types,
                     price_students=price_students,
                     price_employees=price_emp,
                     price_others=price_others,

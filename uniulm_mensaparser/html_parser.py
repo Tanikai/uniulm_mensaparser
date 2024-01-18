@@ -114,11 +114,14 @@ class HtmlMensaParser:
             # Get meal type (vegetarian, vegan, ...) -> there can be multiple meal types per meal
             meal_type = ""
             meal_types = []
-            meal_type_icons = mealDiv.findAll("img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}) # not bio
-            print(meal_type_icons)
+            meal_type_icons = mealDiv.findAll(
+                "img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}
+            )  # not bio
             if meal_type_icons is not None and not len(meal_type_icons) == 0:
                 meal_type = meal_type_icons[0].attrs["title"]
-                meal_types = list(map(lambda icon: icon.attrs["title"], meal_type_icons))
+                meal_types = list(
+                    map(lambda icon: icon.attrs["title"], meal_type_icons)
+                )
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text
@@ -142,4 +145,6 @@ class HtmlMensaParser:
     def _parse_prices(self, price: str) -> Tuple[str, str, str]:
         cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
         split = list(map(lambda price: price.strip() + " €", cleaned.split("|")))
+        if len(split) != 3:
+            return "n/a", "n/a", "n/a"
         return split[0], split[1], split[2]

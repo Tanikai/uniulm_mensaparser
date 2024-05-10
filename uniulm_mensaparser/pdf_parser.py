@@ -312,6 +312,13 @@ class MensaNordParser(MensaParserIntf):
 
         split_prices = prices.split(" ")
 
+        if len(split_prices) < 9:
+            return {
+                "students": "? €",
+                "employees": "? €",
+                "others": "? €",
+            }
+
         p = {
             "students": split_prices[2] + " €",
             "employees": split_prices[5] + " €",

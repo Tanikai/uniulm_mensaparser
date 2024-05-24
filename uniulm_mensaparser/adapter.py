@@ -90,6 +90,16 @@ class FsEtAdapter(PlanAdapter):
             "type": meal.type,
             "types": meal.types,
             "allergy": list(meal.allergy_ids),
+            "co2": meal.co2,
+            "nutrition": {
+                "calories": meal.nutrition.calories,
+                "protein": meal.nutrition.protein,
+                "carbohydrates": meal.nutrition.carbohydrates,
+                "sugar": meal.nutrition.sugar,
+                "fat": meal.nutrition.fat,
+                "saturated_fat": meal.nutrition.saturated_fat,
+                "salt": meal.nutrition.salt,
+            },
         }
         if canteen not in day:
             day[canteen] = {"meals": [], "open": True}
@@ -132,6 +142,16 @@ class SimpleAdapter2(PlanAdapter):
                 "type": meal.type,
                 "types": meal.types,
                 "allergy": list(meal.allergy_ids),
+                "co2": meal.co2,
+                "nutrition": {
+                    "calories": meal.nutrition.calories,
+                    "protein": meal.nutrition.protein,
+                    "carbohydrates": meal.nutrition.carbohydrates,
+                    "sugar": meal.nutrition.sugar,
+                    "fat": meal.nutrition.fat,
+                    "saturated_fat": meal.nutrition.saturated_fat,
+                    "salt": meal.nutrition.salt,
+                },
             }
         )
 

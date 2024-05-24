@@ -1,14 +1,14 @@
 import re
 
 from bs4 import BeautifulSoup, Tag, NavigableString
-from uniulm_mensaparser.models import Meal, MealCategory, Canteen
+from uniulm_mensaparser.models import Meal, MealCategory, Canteen, MealNutrition
 from typing import List, Tuple
 from dataclasses import dataclass
 
 from datetime import datetime
 
 from uniulm_mensaparser.pdf_parser import build_meal_name
-from uniulm_mensaparser.utils import date_format_iso
+from uniulm_mensaparser.utils import date_format_iso, normalize_str
 
 
 @dataclass
@@ -127,6 +127,17 @@ class HtmlMensaParser:
             price_text = price_div.text
             price_students, price_emp, price_others = self._parse_prices(price_text)
 
+            # Get co2 and nutrition information
+            nutri_div = mealDiv.find("div", {"class": "azn"})
+
+            co2_list = list(filter(lambda elem: isinstance(elem, NavigableString), nutri_div.contents))
+            co2_str = " ".join(co2_list).strip()
+            co2_str = re.sub(r"^.*Portion ", "", co2_str)
+
+            nutri_rows = nutri_div.findAll("tr")
+            nutri_rows = nutri_rows[1:] # remove header row
+            nutrition = self._parse_meal_nutrition(nutri_rows)
+
             meals.append(
                 Meal(
                     name=meal_name,
@@ -137,6 +148,8 @@ class HtmlMensaParser:
                     price_students=price_students,
                     price_employees=price_emp,
                     price_others=price_others,
+                    co2=co2_str,
+                    nutrition=nutrition,
                 )
             )
 
@@ -148,3 +161,41 @@ class HtmlMensaParser:
         if len(split) != 3:
             return "n/a", "n/a", "n/a"
         return split[0], split[1], split[2]
+
+    def _parse_meal_nutrition(self, divs) -> MealNutrition:
+        try:
+            # energy
+            energy_cells = divs[0].findAll("td")
+            energy_value = energy_cells[1].decode_contents().strip()
+
+            # protein
+            protein_cells = divs[1].findAll("td")
+            protein_value = protein_cells[1].decode_contents().strip()
+
+            # fat & saturated fat
+            fat_cells = divs[2].findAll("td")
+            fat_value = fat_cells[1].decode_contents().strip()
+            saturated_fat_value = normalize_str(fat_cells[2].decode_contents()).strip(" ()") # uses non-default parentheses
+
+            # carbohydrates & sugar
+            carb_cells = divs[3].findAll("td")
+            carb_value = carb_cells[1].decode_contents().strip()
+            sugar_value = normalize_str(carb_cells[2].decode_contents()).strip(" ()")
+
+            # salt
+            salt_cells = divs[4].findAll("td")
+            salt_value = salt_cells[1].decode_contents().strip()
+
+            return MealNutrition(
+                calories=energy_value,
+                protein=protein_value,
+                fat=fat_value,
+                saturated_fat=saturated_fat_value,
+                carbohydrates=carb_value,
+                sugar=sugar_value,
+                salt=salt_value,
+            )
+
+        except Exception as e:
+            # old html format does not have nutrition list
+            return MealNutrition()

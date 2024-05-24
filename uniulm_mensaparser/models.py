@@ -234,18 +234,31 @@ class Canteen(Enum):
 
 
 @dataclass
+class MealNutrition:
+    calories: str = ""
+    protein: str = ""
+    carbohydrates: str = ""
+    sugar: str = ""
+    fat: str = ""
+    saturated_fat: str = ""
+    salt: str = ""
+
+
+@dataclass
 class Meal:
     name: str = ""
     category: MealCategory = DefaultMealCategory.NONE
     date: str = ""
-    week_number: int = -1 # can be derived from the date but included for easier use of data
+    week_number: int = -1  # can be derived from the date but included for easier use of data
     price_students: str = ""
     price_employees: str = ""
     price_others: str = ""
     canteen: Canteen = Canteen.NONE
-    allergy_ids: set = field(default_factory=set) # e.g. 26, 34W, 27
+    allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
     type: str = ""  # vegetarian / vegan / etc. -> parsed from used icon
     types: list[str] = field(default_factory=list)
+    co2: str = ""
+    nutrition: MealNutrition = field(default_factory=MealNutrition)
 
 
 @dataclass

@@ -342,8 +342,11 @@ class MensaNordParser(MensaParserIntf):
         self.price_found = False
 
         lines = re.split("\n+", column_text)
-        while "Pizza" not in lines[0]:
+        while len(lines) > 0 and "Pizza" not in lines[0]:
             lines.pop(0)
+        if len(lines) == 0:
+            self.is_open[weekday] = False
+            return
         lines.append(
             "placeholder"
         )  # add line at end so that parser can finish last meal

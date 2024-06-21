@@ -1,14 +1,16 @@
 # Uni Ulm Mensa Parser
 
-This project contains a parser for the canteen / mensa plans at
+This project contains a parser for the canteen / Mensa plans at
 Ulm University that are provided on the
-[Studierendenwerk Ulm website](https://studierendenwerk-ulm.de/essen-trinken/speiseplaene/). 
-You can see the data in action on the [**UUlm Mensaplan website**](https://mensaplan2.anter.dev/).
+[Studierendenwerk Ulm website](https://studierendenwerk-ulm.de/essen-trinken/speiseplaene/).
+You can see the data in action on the
+[**UUlm Mensaplan website**](https://mensaplan.anter.dev/).
 
-The parsed data can be accessed here:
-[uulm.anter.dev/api/v1/canteens/ul_uni_sued](https://uulm.anter.dev/api/v1/canteens/ul_uni_sued)
+The parsed data is provided via a REST API as well:
+[https://uulm.anter.dev/api/v1/canteens/all](https://uulm.anter.dev/api/v1/canteens/all)
 
-The source code for the REST API can be found at [github.com/Tanikai/uniulm_mensa_api](https://github.com/Tanikai/uniulm_mensa_api).
+The source code for the REST API is available at
+[Tanikai/uniulm_mensa_api](https://github.com/Tanikai/uniulm_mensa_api).
 
 ## Getting Started
 
@@ -17,7 +19,8 @@ your local machine for development and testing purposes.
 
 ### Prerequisites
 
-This project is tested and deployed with Python 3.9+. The dependencies require Python 3.7+.
+This project is tested and deployed with Python 3.9+. The dependencies require
+Python 3.7+.
 
 ### Integration into your own project
 
@@ -62,7 +65,12 @@ pip install -r requirements.txt
   extract PDF links from the Studierendenwerk Ulm website
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) to scrape the tables of the canteen plan PDFs
 
-## Get new Test Data of MaxManaager
+## New MaxManager API endpoint
+
+Since 2023, there is a new API endpoint for some canteens. This allows us to
+parse the returned HTML, instead of the PDF file. The following curl command
+sends a request to the new endpoint. Don't forget to replace the date with the
+current date.
 
 ```bash
 curl -X POST 'https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc.php?func=make_spl&locId=1&date=2023-07-20&lang=de&startThisWeek=2023-07-17&startNextWeek=2023-07-24'

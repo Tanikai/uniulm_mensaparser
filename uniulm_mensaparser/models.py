@@ -83,6 +83,8 @@ class MealCategory(Enum):
             return DefaultMealCategory.SALAT
         elif "desserts" in cleaned_label:
             return DefaultMealCategory.DESSERTS
+        elif "warme theke i" in cleaned_label:
+            return DefaultMealCategory.WARME_THEKE_I
         elif "pizza iii" in cleaned_label:
             return BistroMealCategory.PIZZA_III
         elif "pizza ii" in cleaned_label:
@@ -115,6 +117,8 @@ class MealCategory(Enum):
             return "Salat"
         elif "desserts" in cleaned_label:
             return "Desserts"
+        elif "warme theke i" in cleaned_label:
+            return "Warme Theke I"
         elif "pizza iii" in cleaned_label:
             return "Pizza III"
         elif "pizza ii" in cleaned_label:
@@ -147,6 +151,7 @@ class DefaultMealCategory(MealCategory):
     BEILAGEN = 6
     SALAT = 7
     DESSERTS = 8
+    WARME_THEKE_I = 9
 
 
 class BistroMealCategory(MealCategory):

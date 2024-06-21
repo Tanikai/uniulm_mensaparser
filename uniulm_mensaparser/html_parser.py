@@ -130,13 +130,16 @@ class HtmlMensaParser:
             # Get co2 and nutrition information
             nutri_div = mealDiv.find("div", {"class": "azn"})
 
-            co2_list = list(filter(lambda elem: isinstance(elem, NavigableString), nutri_div.contents))
-            co2_str = " ".join(co2_list).strip()
-            co2_str = re.sub(r"^.*Portion ", "", co2_str)
+            co2_str = ""
+            nutrition = MealNutrition()
+            if nutri_div:
+                co2_list = list(filter(lambda elem: isinstance(elem, NavigableString), nutri_div.contents))
+                co2_str = " ".join(co2_list).strip()
+                co2_str = re.sub(r"^.*Portion ", "", co2_str)
 
-            nutri_rows = nutri_div.findAll("tr")
-            nutri_rows = nutri_rows[1:] # remove header row
-            nutrition = self._parse_meal_nutrition(nutri_rows)
+                nutri_rows = nutri_div.findAll("tr")
+                nutri_rows = nutri_rows[1:] # remove header row
+                nutrition = self._parse_meal_nutrition(nutri_rows)
 
             meals.append(
                 Meal(

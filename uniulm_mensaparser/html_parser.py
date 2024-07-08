@@ -61,8 +61,8 @@ class HtmlMensaParser:
             meal_divs = []
 
             while (
-                len(meal_categories) > 0
-                and "gruppenkopf" not in meal_categories[0].attrs["class"]
+                    len(meal_categories) > 0
+                    and "gruppenkopf" not in meal_categories[0].attrs["class"]
             ):
                 meal_divs.append(meal_categories.pop(0))
 
@@ -138,7 +138,7 @@ class HtmlMensaParser:
                 co2_str = re.sub(r"^.*Portion ", "", co2_str)
 
                 nutri_rows = nutri_div.findAll("tr")
-                nutri_rows = nutri_rows[1:] # remove header row
+                nutri_rows = nutri_rows[1:]  # remove header row
                 nutrition = self._parse_meal_nutrition(nutri_rows)
 
             meals.append(
@@ -166,6 +166,16 @@ class HtmlMensaParser:
         return split[0], split[1], split[2]
 
     def _parse_meal_nutrition(self, divs) -> MealNutrition:
+
+        def _parse_nutrition_with_parentheses(div_text: str) -> Tuple[str, str]:
+            gram_index = div_text.find("g")
+            first_value = div_text[:gram_index + 1]
+            left_parentheses_index = div_text.find("(")
+            right_parentheses_index = div_text.find(")")
+            parentheses_value = div_text[left_parentheses_index + 1:right_parentheses_index]
+
+            return first_value, parentheses_value
+
         try:
             # energy
             energy_cells = divs[0].findAll("td")
@@ -177,13 +187,11 @@ class HtmlMensaParser:
 
             # fat & saturated fat
             fat_cells = divs[2].findAll("td")
-            fat_value = fat_cells[1].decode_contents().strip()
-            saturated_fat_value = normalize_str(fat_cells[2].decode_contents()).strip(" ()") # uses non-default parentheses
+            fat_value, saturated_fat_value = _parse_nutrition_with_parentheses(fat_cells[1].decode_contents().strip())
 
             # carbohydrates & sugar
             carb_cells = divs[3].findAll("td")
-            carb_value = carb_cells[1].decode_contents().strip()
-            sugar_value = normalize_str(carb_cells[2].decode_contents()).strip(" ()")
+            carb_value, sugar_value = _parse_nutrition_with_parentheses(carb_cells[1].decode_contents().strip())
 
             # salt
             salt_cells = divs[4].findAll("td")

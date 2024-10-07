@@ -125,7 +125,7 @@ class HtmlMensaParser:
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text
-            price_students, price_emp, price_others = self._parse_prices(price_text)
+            price_students, price_emp, price_others, price_note = self._parse_prices(price_text)
 
             # Get co2 and nutrition information
             nutri_div = mealDiv.find("div", {"class": "azn"})
@@ -148,6 +148,7 @@ class HtmlMensaParser:
                     allergy_ids=allergy_ids,
                     type=meal_type,
                     types=meal_types,
+                    price_note=price_note,
                     price_students=price_students,
                     price_employees=price_emp,
                     price_others=price_others,
@@ -158,12 +159,29 @@ class HtmlMensaParser:
 
         return meals
 
-    def _parse_prices(self, price: str) -> Tuple[str, str, str]:
+    def _parse_prices(self, price: str) -> Tuple[str, str, str, str]:
+        """
+        price_note is an additional information regarding the price, e.g. "pro 100g"
+
+        Args:
+            price:
+
+        Returns: [price_students, price_employees, price_others, price_note]
+
+        """
+        price_note = ""
+        if "(" in price:
+            left_parentheses_index = price.find("(")
+            right_parentheses_index = price.find(")")
+            price_note = price[left_parentheses_index + 1:right_parentheses_index]
+            price = price[right_parentheses_index+1:]
+
         cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
+
         split = list(map(lambda price: price.strip() + " €", cleaned.split("|")))
         if len(split) != 3:
-            return "n/a", "n/a", "n/a"
-        return split[0], split[1], split[2]
+            return "n/a", "n/a", "n/a", price_note
+        return split[0], split[1], split[2], price_note
 
     def _parse_meal_nutrition(self, divs) -> MealNutrition:
 

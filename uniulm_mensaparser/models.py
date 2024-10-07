@@ -273,6 +273,7 @@ class Meal:
     price_students: str = ""
     price_employees: str = ""
     price_others: str = ""
+    price_note: str = ""
     canteen: Canteen = Canteen.NONE
     allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
     type: str = ""  # vegetarian / vegan / etc. -> parsed from used icon

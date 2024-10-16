@@ -1,6 +1,6 @@
 from unittest import TestCase
 from uniulm_mensaparser.html_parser import HtmlMensaParser
-from uniulm_mensaparser.models import Canteen, DefaultMealCategory, Meal, MealNutrition
+from uniulm_mensaparser.models import Canteen, Meal, MealNutrition
 from datetime import datetime
 from dataclasses import asdict
 
@@ -11,14 +11,14 @@ class TestHtmlParser(TestCase):
         with open("new-html/double.html") as f:
             parser = HtmlMensaParser()
             plan = parser.parse_plan(f.read(), datetime(2023, 12, 19), Canteen.UL_UNI_Sued)
-            meal: Meal = next(filter(lambda p: p.category == DefaultMealCategory.FLEISCH_UND_FISCH, plan))
+            meal: Meal = next(filter(lambda p: p.category == "Fleisch und Fisch", plan))
             self.assertListEqual(meal.types, ["Fisch", "Geflügel"], "meal has to contain both categories")
 
     def test_extra_category(self):
         with open("new-html/wiener.html") as f:
             parser = HtmlMensaParser()
             plan = parser.parse_plan(f.read(), datetime(2023, 12, 21), Canteen.UL_UNI_Sued)
-            meal: Meal = next(filter(lambda p: p.category == DefaultMealCategory.EXTRA, plan))
+            meal: Meal = next(filter(lambda p: p.category == "Extra", plan))
             self.assertEqual(meal.name, "1 Wienerle")
 
     def test_nutrition(self):
@@ -26,7 +26,7 @@ class TestHtmlParser(TestCase):
             parser = HtmlMensaParser()
             plan = parser.parse_plan(f.read(), datetime(2024, 5, 21), Canteen.UL_UNI_Sued)
 
-            tup: Meal = next(filter(lambda p: p.category == DefaultMealCategory.TOPF_UND_PFANNE, plan))
+            tup: Meal = next(filter(lambda p: p.category == "Topf und Pfanne", plan))
             self.assertEqual(tup.co2, "744 g")
             self.assertDictEqual(asdict(tup.nutrition), asdict(MealNutrition(
                 calories="565,0 kcal",
@@ -37,10 +37,3 @@ class TestHtmlParser(TestCase):
                 sugar="davon Zucker 12,0 g",
                 salt="2,5 g"
             )))
-
-            prima = next(filter(lambda p: p.category == DefaultMealCategory.PRIMA_KLIMA, plan))
-            fuf = next(filter(lambda p: p.category == DefaultMealCategory.FLEISCH_UND_FISCH, plan))
-            satt = next(filter(lambda p: p.category == DefaultMealCategory.SATTMACHER, plan))
-            beilagen = next(filter(lambda p: p.category == DefaultMealCategory.BEILAGEN, plan))
-            salat = next(filter(lambda p: p.category == DefaultMealCategory.SALAT, plan))
-            desserts = next(filter(lambda p: p.category == DefaultMealCategory.DESSERTS, plan))

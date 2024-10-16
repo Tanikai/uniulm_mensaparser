@@ -1,7 +1,7 @@
 import re
 
 from bs4 import BeautifulSoup, Tag, NavigableString
-from uniulm_mensaparser.models import Meal, MealCategory, Canteen, MealNutrition
+from uniulm_mensaparser.models import Meal, Canteen, MealNutrition
 from typing import List, Tuple
 from dataclasses import dataclass
 
@@ -84,9 +84,9 @@ class HtmlMensaParser:
         Returns:
 
         """
-        meal_category = MealCategory.from_str(
-            str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
-        )
+        meal_category = str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0]).strip()
+        meal_category = ' '.join(word.capitalize() for word in meal_category.split())
+        meal_category = meal_category.replace("+", "und")
 
         meals = []
 

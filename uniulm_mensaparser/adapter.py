@@ -1,5 +1,5 @@
 from typing import List
-from .models import MealCategory, Meal, Plan
+from .models import Meal, Plan
 from abc import abstractmethod
 from collections import defaultdict
 
@@ -84,7 +84,7 @@ class FsEtAdapter(PlanAdapter):
             return
 
         meal_dict = {
-            "category": MealCategory.pretty_print(str(meal.category)),
+            "category": meal.category,
             "meal": meal.name,
             "price": f"{meal.price_students} | {meal.price_employees} | {meal.price_others}",
             "price_note": meal.price_note,
@@ -133,7 +133,7 @@ class SimpleAdapter2(PlanAdapter):
         result[mensa_name][meal.date].append(
             {
                 "name": meal.name,
-                "category": MealCategory.pretty_print(meal.category.name),
+                "category": meal.category,
                 "prices": {
                     "students": meal.price_students,
                     "employees": meal.price_employees,
@@ -180,7 +180,7 @@ class SimpleAdapter(PlanAdapter):
                         continue
                     out = {
                         "name": current_meal["name"],
-                        "category": MealCategory.pretty_print(meal_category),
+                        "category": current_meal.category,
                         "prices": dict(current_meal["prices"]),
                     }
                     mensa_dict[date].append(out)

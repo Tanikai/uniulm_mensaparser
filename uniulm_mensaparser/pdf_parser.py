@@ -1,7 +1,7 @@
 import re
 import fitz
 from datetime import timedelta, datetime
-from .models import Weekday, DefaultMealCategory, BistroMealCategory, Canteen, Meal
+from .models import Weekday, Canteen, Meal
 from abc import abstractmethod
 
 

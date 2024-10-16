@@ -60,124 +60,6 @@ class Weekday(Enum):
             raise ValueError(f"{val} is not a valid Weekday")
         return w.name.lower()
 
-
-class MealCategory(Enum):
-    @staticmethod
-    def from_str(label: str):
-        cleaned_label = (
-            label.lower().strip().replace("_", " ")
-        )  # all smallercase and trim whitespace
-        if "fleisch" in cleaned_label:
-            return DefaultMealCategory.FLEISCH_UND_FISCH
-        elif "prima klima" in cleaned_label:
-            return DefaultMealCategory.PRIMA_KLIMA
-        elif "sattmacher" in cleaned_label:
-            return DefaultMealCategory.SATTMACHER
-        elif "topf" in cleaned_label:
-            return DefaultMealCategory.TOPF_UND_PFANNE
-        elif "extra" in cleaned_label:
-            return DefaultMealCategory.EXTRA
-        elif "beilagen" in cleaned_label:
-            return DefaultMealCategory.BEILAGEN
-        elif "salat" in cleaned_label:
-            return DefaultMealCategory.SALAT
-        elif "desserts" in cleaned_label:
-            return DefaultMealCategory.DESSERTS
-        elif "warme theke ii" in cleaned_label:
-            return DefaultMealCategory.WARME_THEKE_II
-        elif "warme theke i" in cleaned_label:
-            return DefaultMealCategory.WARME_THEKE_I
-        elif "aktionstheke" in cleaned_label:
-            return DefaultMealCategory.AKTIONSTHEKE
-        elif "crunchy" in cleaned_label:
-            return DefaultMealCategory.CRUNCHY_UND_CRISPY
-        elif "pizza iii" in cleaned_label:
-            return BistroMealCategory.PIZZA_III
-        elif "pizza ii" in cleaned_label:
-            return BistroMealCategory.PIZZA_II
-        elif "pizza i" in cleaned_label:
-            return BistroMealCategory.PIZZA_I
-        elif "pasta ii" in cleaned_label:
-            return BistroMealCategory.PASTA_II
-        elif "pasta i" in cleaned_label:
-            return BistroMealCategory.PASTA_I
-        else:
-            raise ValueError(f"parse error with input {label}")
-
-    @staticmethod
-    def pretty_print(value: str):
-        cleaned_label = value.lower().strip().replace("_", " ")
-        if "fleisch" in cleaned_label:
-            return "Fleisch und Fisch"
-        elif "prima klima" in cleaned_label:
-            return "Prima Klima"
-        elif "sattmacher" in cleaned_label:
-            return "Sattmacher"
-        elif "topf" in cleaned_label:
-            return "Topf und Pfanne"
-        elif "extra" in cleaned_label:
-            return "Extra"
-        elif "beilagen" in cleaned_label:
-            return "Beilagen"
-        elif "salat" in cleaned_label:
-            return "Salat"
-        elif "desserts" in cleaned_label:
-            return "Desserts"
-        elif "warme theke ii" in cleaned_label:
-            return "Warme Theke II"
-        elif "warme theke i" in cleaned_label:
-            return "Warme Theke I"
-        elif "aktionstheke" in cleaned_label:
-            return "Aktionstheke"
-        elif "crunchy" in cleaned_label:
-            return "Crunchy und Crispy"
-        elif "pizza iii" in cleaned_label:
-            return "Pizza III"
-        elif "pizza ii" in cleaned_label:
-            return "Pizza II"
-        elif "pizza i" in cleaned_label:
-            return "Pizza I"
-        elif "pasta ii" in cleaned_label:
-            return "Pasta II"
-        elif "pasta i" in cleaned_label:
-            return "Pasta I"
-        else:
-            return ""
-
-    @staticmethod
-    def is_meal_category(line: str) -> bool:
-        try:
-            MealCategory.from_str(line)
-            return True
-        except ValueError:
-            return False
-
-
-class DefaultMealCategory(MealCategory):
-    NONE = 0
-    FLEISCH_UND_FISCH = 1
-    PRIMA_KLIMA = 2
-    SATTMACHER = 3
-    TOPF_UND_PFANNE = 4
-    EXTRA = 5
-    BEILAGEN = 6
-    SALAT = 7
-    DESSERTS = 8
-    WARME_THEKE_I = 9
-    WARME_THEKE_II = 10
-    AKTIONSTHEKE = 11
-    CRUNCHY_UND_CRISPY = 12
-
-
-class BistroMealCategory(MealCategory):
-    NONE = 0
-    PIZZA_I = 1
-    PIZZA_II = 2
-    PIZZA_III = 3
-    PASTA_I = 4
-    PASTA_II = 5
-
-
 class Canteen(Enum):
     NONE = 0
     UL_UNI_Sued = 1
@@ -187,34 +69,6 @@ class Canteen(Enum):
 
     def __str__(self):
         return ""
-
-    def meal_category_order(self):
-        if self == self.UL_UNI_Sued:
-            return [
-                DefaultMealCategory.PRIMA_KLIMA,
-                DefaultMealCategory.TOPF_UND_PFANNE,
-                DefaultMealCategory.FLEISCH_UND_FISCH,
-                DefaultMealCategory.SATTMACHER,
-                DefaultMealCategory.EXTRA,
-            ]
-        elif self == self.UL_UNI_West:
-            return [
-                DefaultMealCategory.PRIMA_KLIMA,
-                DefaultMealCategory.TOPF_UND_PFANNE,
-                DefaultMealCategory.FLEISCH_UND_FISCH,
-                DefaultMealCategory.SATTMACHER,
-                DefaultMealCategory.EXTRA,
-            ]
-        elif self == self.UL_UNI_Nord:
-            return [
-                BistroMealCategory.PIZZA_I,
-                BistroMealCategory.PIZZA_II,
-                BistroMealCategory.PIZZA_III,
-                BistroMealCategory.PASTA_I,
-                BistroMealCategory.PASTA_II,
-            ]
-        else:
-            return []
 
     def get_maxmanager_id(self) -> int:
         if self == self.UL_UNI_Sued:
@@ -267,7 +121,7 @@ class MealNutrition:
 @dataclass
 class Meal:
     name: str = ""
-    category: MealCategory = DefaultMealCategory.NONE
+    category: str = ""
     date: str = ""
     week_number: int = -1  # can be derived from the date but included for easier use of data
     price_students: str = ""

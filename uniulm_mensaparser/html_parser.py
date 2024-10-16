@@ -17,6 +17,23 @@ class SoupMealCategory:
     mealDivs: List[Tag]
 
 
+def _pretty_print_meal(meal_category: str) -> str:
+    words = meal_category.strip().split()
+    formatted = []
+    for word in words:
+        if word == "+":
+            formatted.append("und")
+            continue
+
+        if all(letter.lower() == 'i' for letter in word):
+            formatted.append(word.upper())
+            continue
+
+        formatted.append(word.capitalize())
+
+    return " ".join(formatted)
+
+
 class HtmlMensaParser:
     def __init__(self):
         pass
@@ -84,10 +101,7 @@ class HtmlMensaParser:
         Returns:
 
         """
-        meal_category = str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0]).strip()
-        meal_category = ' '.join(word.capitalize() for word in meal_category.split())
-        meal_category = meal_category.replace("+", "und")
-
+        meal_category = str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
         meals = []
 
         for mealDiv in category.mealDivs:
@@ -142,7 +156,7 @@ class HtmlMensaParser:
             meals.append(
                 Meal(
                     name=meal_name,
-                    category=meal_category,
+                    category=_pretty_print_meal(meal_category),
                     allergy_ids=allergy_ids,
                     types=meal_types,
                     price_note=price_note,

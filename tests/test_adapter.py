@@ -1,6 +1,6 @@
 from unittest import TestCase
 from uniulm_mensaparser.models import Weekday, Canteen, Plan
-from uniulm_mensaparser.adapter import SimpleAdapter2, FsEtAdapter
+from uniulm_mensaparser.adapter import SimpleAdapter2
 import json
 import io
 

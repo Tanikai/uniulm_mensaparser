@@ -1,6 +1,6 @@
 from unittest import TestCase
 from uniulm_mensaparser.html_parser import HtmlMensaParser
-from uniulm_mensaparser.models import Canteen, Meal, MealNutrition
+from uniulm_mensaparser.models import Canteen, Meal
 from datetime import datetime
 
 

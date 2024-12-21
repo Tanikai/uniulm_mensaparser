@@ -1,7 +1,9 @@
 from .models import Canteen
 from .adapter import SimpleAdapter2, PlanAdapter
 from .mensaparser import get_meals_for_canteens, format_meals
-from typing import Set, Type
+from typing import Set, Type, Tuple, List
+from .models import MultiCanteenPlan
+from datetime import datetime
 import asyncio
 
 """
@@ -19,15 +21,19 @@ def get_plan(canteens: Set[Canteen] = None, adapter_class: Type[PlanAdapter] = N
     Returns: Formatted canteen plan
 
     """
-    unformatted_meals = get_unformatted_plan(canteens)
+
+    if canteens is None:
+        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}
+
+    multi_canteen_plan = get_unformatted_plan(canteens)
 
     if adapter_class is None:
         adapter_class = SimpleAdapter2
 
-    return format_meals(unformatted_meals, adapter_class)
+    return format_meals(multi_canteen_plan, adapter_class)
 
 
-def get_unformatted_plan(canteens: Set[Canteen] = None):
+def get_unformatted_plan(canteens: Set[Canteen] = None) -> MultiCanteenPlan:
     if canteens is None:
         canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}
 

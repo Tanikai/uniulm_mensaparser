@@ -2,75 +2,77 @@ import asyncio
 
 from .adapter import PlanAdapter
 from .html_parser import HtmlMensaParser
-from .models import Canteen, Meal, Plan
-from .studierendenwerk_scraper import get_maxmanager_weekly_plans, get_maxmanager_website
-from typing import List, Set, Type
-from datetime import datetime, timedelta
+from .models import Canteen, Meal, MultiCanteenPlan, DailyCanteenMeals
+from .studierendenwerk_scraper import get_maxmanager_website
+from typing import List, Set, Type, Tuple
+from datetime import datetime, date
 import aiohttp
 
-from .utils import date_format_iso
+from .utils import get_weekdates_this_and_next_week, date_format_iso
 
 
-async def get_meals_for_canteens(canteens: Set[Canteen]) -> List[Plan]:
+async def get_meals_for_canteens(canteens: Set[Canteen]) -> MultiCanteenPlan:
     """
-    This is the main function to get mensa plans.
+
+    Args:
+        canteens: Canteens to fetch meals from.
+
+    Returns: Tuple of List of meals and List of fetched & parsed dates.
+
     """
     async with aiohttp.ClientSession() as session:
         # TODO: Plan object should be refactored
-        plans: List[Plan] = get_maxmanager_weekly_plans(canteens)
 
-        async def _parse_plan(plan: Plan) -> Plan:
-            return await parse_maxmanager_plan(session, plan)
+        # get today's date
+        today = datetime.now()
+        # get weekdates from this week and next week
+        dates = get_weekdates_this_and_next_week(today)
 
         tasks: List[asyncio.Task] = []
-        for p in plans:
-            tasks.append(asyncio.create_task(_parse_plan(p)))
 
-        results = await asyncio.gather(*tasks)
-    return results
+        async def get_meals_by_canteen(c: Canteen):
+            return c, await get_meals_per_canteen(session, dates, c)
+
+        for canteen in canteens:
+            tasks.append(asyncio.create_task(get_meals_by_canteen(canteen)))
+
+        results: List[Tuple[Canteen, DailyCanteenMeals]] = await asyncio.gather(*tasks)
+
+    return dict(results)
 
 
-def format_meals(meals: List[Plan], adapter_class: Type[PlanAdapter]):
+async def get_meals_per_canteen(session, dates: List[datetime], canteen: Canteen) -> DailyCanteenMeals:
+    tasks: List[asyncio.Task] = []
+
+    async def get_meal_by_date(d: date):
+        return d, await get_meals_for_date(session, d, canteen)
+
+    for d in dates:
+        tasks.append(asyncio.create_task(get_meal_by_date(d)))
+
+    results: List[Tuple[date, List[Meal]]] = await asyncio.gather(*tasks)
+    return dict(results)
+
+
+def format_meals(canteen_plans: MultiCanteenPlan, adapter_class: Type[PlanAdapter]):
     adapter = adapter_class()
-    converted = adapter.convert_plans(meals)
+    converted = adapter.convert_plans(canteen_plans)
     return converted
-
-async def parse_maxmanager_plan(session: aiohttp.ClientSession, plan: Plan) -> Plan:
-    """
-    Parses the current canteen plan from the MaxManager CMS endpoint.
-    Args:
-        session: The session which should be used to issue HTTP requests.
-        plan: Information about the canteen, weekdays, and opened days
-
-    Returns: Plan from argument with updated values
-
-    """
-    weekdates = _get_weekdates(plan.first_date)
-
-    meals = []
-    for date in weekdates:
-        datemeals = await get_meals_for_date(session, date, plan.canteen)
-        if len(datemeals) == 0:
-            plan.opened_days[date_format_iso(date)] = False
-        if len(datemeals) > 0:
-            meals += datemeals
-            plan.opened_days[date_format_iso(date)] = True
-
-    plan.meals = meals
-
-    return plan
 
 
 async def get_meals_for_date(
-    session: aiohttp.ClientSession, date: datetime, canteen: Canteen
+        session: aiohttp.ClientSession, plan_date: date, canteen: Canteen
 ) -> List[Meal]:
+    """
+    This function is used to fetch and parse a single day from the specified canteen.
+    Args:
+        session:
+        plan_date:
+        canteen:
+
+    Returns:
+
+    """
     p = HtmlMensaParser()
-    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), date)
-    return p.parse_plan(source, date, canteen)
-
-
-def _get_weekdates(date: datetime) -> List[datetime]:
-    start_of_current_week = date - timedelta(days=date.weekday())
-    current_weekdates = [start_of_current_week + timedelta(days=i) for i in range(5)]
-
-    return current_weekdates
+    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), plan_date)
+    return p.parse_plan(source, plan_date, canteen)

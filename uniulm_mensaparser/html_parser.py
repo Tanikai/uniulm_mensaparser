@@ -5,7 +5,7 @@ from uniulm_mensaparser.models import Meal, Canteen, MealNutrition
 from typing import List, Tuple
 from dataclasses import dataclass
 
-from datetime import datetime
+from datetime import date
 
 from uniulm_mensaparser.utils import date_format_iso
 
@@ -15,9 +15,11 @@ class SoupMealCategory:
     headerDiv: Tag
     mealDivs: List[Tag]
 
+
 def remove_allergens(line: str) -> str:
     parentheses_re = r"\(.*?\)"  # ? == greedy match
     return re.sub(parentheses_re, "", line)
+
 
 def build_meal_name(meal_lines: [str]) -> str:
     meal_name = " ".join(meal_lines)
@@ -38,6 +40,7 @@ def build_meal_name(meal_lines: [str]) -> str:
     )  # remove commas without content before or after
     meal_name = meal_name.strip()  # strip remaining whitespace before and after string
     return meal_name
+
 
 def _pretty_print_meal(meal_category: str) -> str:
     words = meal_category.strip().split()
@@ -61,7 +64,7 @@ class HtmlMensaParser:
         pass
 
     # Gets the source of a day and parses it into meals.
-    def parse_plan(self, source: str, date: datetime, canteen: Canteen) -> List[Meal]:
+    def parse_plan(self, source: str, plan_date: date, canteen: Canteen) -> List[Meal]:
         soup = BeautifulSoup(source, "html.parser")
         meals: List[Meal] = []
 
@@ -78,11 +81,11 @@ class HtmlMensaParser:
         for cat in categories:
             meals += self._parse_category(cat)
 
-        year, week_number, _ = date.isocalendar()
+        year, week_number, _ = plan_date.isocalendar()
         for m in meals:
             # name and
             # category is already set
-            m.date = date_format_iso(date)
+            m.date = date_format_iso(plan_date)
             m.week_number = week_number
             # prices for students, employees, others is already set
             m.canteen = canteen
@@ -207,7 +210,7 @@ class HtmlMensaParser:
             left_parentheses_index = price.find("(")
             right_parentheses_index = price.find(")")
             price_note = price[left_parentheses_index + 1:right_parentheses_index]
-            price = price[right_parentheses_index+1:]
+            price = price[right_parentheses_index + 1:]
 
         cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
 

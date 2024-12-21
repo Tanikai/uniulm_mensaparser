@@ -1,7 +1,8 @@
 from enum import Enum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
-from datetime import datetime
+from datetime import datetime, date
+from typing import Dict, List
 
 legend = {
     "S": "Schwein",
@@ -58,6 +59,7 @@ class Weekday(Enum):
         else:
             raise ValueError(f"{val} is not a valid Weekday")
         return w.name.lower()
+
 
 class Canteen(Enum):
     NONE = 0
@@ -127,19 +129,9 @@ class Meal:
     price_note: str = ""
     canteen: Canteen = Canteen.NONE
     allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
-    types: list[str] = field(default_factory=list) # vegetarian / vegan / etc. -> parsed from used icon
+    types: list[str] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
     co2: str = ""
     nutrition: MealNutrition = field(default_factory=MealNutrition)
-
-
-@dataclass
-class Plan:
-    canteen: Canteen = Canteen.NONE
-    url: str = ""
-    week: str = ""
-    opened_days: dict[str, bool] = field(default_factory=dict)
-    meals: list[Meal] = field(default_factory=list)
-    first_date: datetime = 0
 
 
 @dataclass
@@ -160,3 +152,8 @@ class MaxmanagerRequest:
             "startThisWeek": date_format_iso(self.startThisWeek),
             "startNextWeek": date_format_iso(self.startNextWeek),
         }
+
+
+DailyCanteenMeals = Dict[date, List[Meal]]
+
+MultiCanteenPlan = Dict[Canteen, DailyCanteenMeals]

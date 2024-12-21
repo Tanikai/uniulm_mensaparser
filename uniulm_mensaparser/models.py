@@ -2,7 +2,6 @@ from enum import Enum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
 from datetime import datetime
-from typing import Set
 
 legend = {
     "S": "Schwein",
@@ -63,8 +62,8 @@ class Weekday(Enum):
 class Canteen(Enum):
     NONE = 0
     UL_UNI_Sued = 1
-    UL_UNI_Nord = 2
-    UL_UNI_Helmholtz = 3
+    # UL_UNI_Nord = 2 # not a canteen anymore
+    UL_UNI_Helmholtz = 16
     UL_UNI_West = 4
 
     def __str__(self):
@@ -75,6 +74,8 @@ class Canteen(Enum):
             return 1
         if self == self.UL_UNI_West:
             return 2
+        if self == self.UL_UNI_Helmholtz:
+            return 3
         else:
             return -1
 
@@ -83,8 +84,6 @@ class Canteen(Enum):
         cleaned_label = label.lower().strip()  # all smallercase and trim whitespace
         if "ul uni mensa süd" in cleaned_label:
             return Canteen.UL_UNI_Sued
-        elif "ul uni nord" in cleaned_label:
-            return Canteen.UL_UNI_Nord
         elif "ul uni helmholtz" in cleaned_label:
             return Canteen.UL_UNI_Helmholtz
         elif "ul uni west" in cleaned_label:
@@ -99,8 +98,6 @@ class Canteen(Enum):
     def to_fs_str(self):
         if self == self.UL_UNI_Sued:
             return "Mensa"
-        elif self == self.UL_UNI_Nord:
-            return "Bistro"
         elif self == self.UL_UNI_West:
             return "West"
         else:

@@ -29,6 +29,6 @@ def get_plan(canteens: Set[Canteen] = None, adapter_class: Type[PlanAdapter] = N
 
 def get_unformatted_plan(canteens: Set[Canteen] = None):
     if canteens is None:
-        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West, Canteen.UL_UNI_Nord}
+        canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}
 
     return asyncio.run(get_meals_for_canteens(canteens))

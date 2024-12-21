@@ -1,10 +1,4 @@
 from unittest import TestCase
-from uniulm_mensaparser.mensaparser import parse_plan_from_file
-from uniulm_mensaparser.pdf_parser import (
-    DefaultMensaParser,
-    MensaNordParser,
-    parse_date_string,
-)
 from uniulm_mensaparser.models import Weekday, Canteen, Plan
 from uniulm_mensaparser.adapter import SimpleAdapter2, FsEtAdapter
 import json
@@ -12,6 +6,7 @@ import io
 
 
 class TestAdapter(TestCase):
+    # FIXME: migrate to maxmanager api
     def test_new_and_legacy_simple_adapter(self):
         mp = DefaultMensaParser(Canteen.UL_UNI_Sued)
         meal = parse_plan_from_file("resources/UL UNI Mensa Süd KW13 W3.pdf", mp)

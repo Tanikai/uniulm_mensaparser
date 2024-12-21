@@ -7,8 +7,7 @@ from dataclasses import dataclass
 
 from datetime import datetime
 
-from uniulm_mensaparser.pdf_parser import build_meal_name
-from uniulm_mensaparser.utils import date_format_iso, normalize_str
+from uniulm_mensaparser.utils import date_format_iso
 
 
 @dataclass
@@ -16,6 +15,29 @@ class SoupMealCategory:
     headerDiv: Tag
     mealDivs: List[Tag]
 
+def remove_allergens(line: str) -> str:
+    parentheses_re = r"\(.*?\)"  # ? == greedy match
+    return re.sub(parentheses_re, "", line)
+
+def build_meal_name(meal_lines: [str]) -> str:
+    meal_name = " ".join(meal_lines)
+
+    meal_name = remove_allergens(meal_name)
+    # remove duplicate whitespaces
+    meal_name = re.sub(r"\s+", r" ", meal_name)
+    # if the next word begins with an uppercase letter, the - is part of
+    # the word and should be kept
+    meal_name = re.sub(r"- ([A-Z])", r"-\g<1>", meal_name)
+    # if the next word begins with a lowercase letter, the - is used for
+    # hyphenation and thus should be removed
+    meal_name = re.sub(r"- ([a-z])", r"\g<1>", meal_name)
+    meal_name = re.sub(r" ,", r",", meal_name)  # remove space before comma
+    meal_name = re.sub(r"(?<=,)(?=\S)", " ", meal_name)  # add space after comma
+    meal_name = re.sub(
+        r" , ", r" ", meal_name
+    )  # remove commas without content before or after
+    meal_name = meal_name.strip()  # strip remaining whitespace before and after string
+    return meal_name
 
 def _pretty_print_meal(meal_category: str) -> str:
     words = meal_category.strip().split()

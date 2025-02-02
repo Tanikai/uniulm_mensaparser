@@ -3,8 +3,8 @@ import aiohttp
 from typing import List
 
 
-def get_monday(week_offset=0):
-    now = datetime.now() + timedelta(weeks=week_offset)
+def get_monday(week_offset=0) -> date:
+    now = date.today() + timedelta(weeks=week_offset)
     monday = now - timedelta(days=now.weekday())
     return monday
 

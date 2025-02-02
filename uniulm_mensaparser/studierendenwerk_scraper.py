@@ -17,10 +17,10 @@ async def get_maxmanager_website(
     Returns the HTML canteen plan for the selected canteen and date.
     Args:
         session:
-        locId:
+        loc_id:
             1: Universität Süd
             2: Universität West
-        date: Date for plan
+        plan_date: Date for plan
 
     Returns: HTML source code of date
     """

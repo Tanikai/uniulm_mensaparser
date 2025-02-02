@@ -8,7 +8,7 @@ from typing import List, Set, Type, Tuple
 from datetime import datetime, date
 import aiohttp
 
-from .utils import get_weekdates_this_and_next_week, date_format_iso
+from .utils import get_weekdates_this_and_next_week
 
 
 async def get_meals_for_canteens(canteens: Set[Canteen]) -> MultiCanteenPlan:
@@ -47,8 +47,8 @@ async def get_meals_per_canteen(session, dates: List[datetime], canteen: Canteen
     async def get_meal_by_date(d: date):
         return d, await get_meals_for_date(session, d, canteen)
 
-    for d in dates:
-        tasks.append(asyncio.create_task(get_meal_by_date(d)))
+    for plan_date in dates:
+        tasks.append(asyncio.create_task(get_meal_by_date(plan_date)))
 
     results: List[Tuple[date, List[Meal]]] = await asyncio.gather(*tasks)
     return dict(results)

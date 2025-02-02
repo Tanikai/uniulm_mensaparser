@@ -93,7 +93,8 @@ class HtmlMensaParser:
 
         return meals
 
-    def _split_categories(self, meal_categories: List[Tag]) -> List[SoupMealCategory]:
+    @staticmethod
+    def _split_categories(meal_categories: List[Tag]) -> List[SoupMealCategory]:
         result: List[SoupMealCategory] = []
 
         while len(meal_categories) > 0:
@@ -195,7 +196,8 @@ class HtmlMensaParser:
 
         return meals
 
-    def _parse_prices(self, price: str) -> Tuple[str, str, str, str]:
+    @staticmethod
+    def _parse_prices(price: str) -> Tuple[str, str, str, str]:
         """
         price_note is an additional information regarding the price, e.g. "pro 100g"
 
@@ -214,12 +216,13 @@ class HtmlMensaParser:
 
         cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
 
-        split = list(map(lambda price: price.strip() + " €", cleaned.split("|")))
+        split = list(map(lambda p: p.strip() + " €", cleaned.split("|")))
         if len(split) != 3:
             return "n/a", "n/a", "n/a", price_note
         return split[0], split[1], split[2], price_note
 
-    def _parse_meal_nutrition(self, divs) -> MealNutrition:
+    @staticmethod
+    def _parse_meal_nutrition(divs) -> MealNutrition:
 
         def _parse_nutrition_with_parentheses(div_text: str) -> Tuple[str, str]:
             gram_index = div_text.find("g")

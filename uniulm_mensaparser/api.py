@@ -1,9 +1,8 @@
 from .models import Canteen
 from .adapter import SimpleAdapter2, PlanAdapter
 from .mensaparser import get_meals_for_canteens, format_meals
-from typing import Set, Type, Tuple, List
+from typing import Set, Type
 from .models import MultiCanteenPlan
-from datetime import datetime
 import asyncio
 
 """

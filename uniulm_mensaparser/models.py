@@ -1,7 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
-from datetime import datetime, date
+from datetime import date
 from typing import Dict, List
 
 legend = {
@@ -97,14 +97,6 @@ class Canteen(Enum):
         else:
             raise NotImplementedError("Unknown Canteen:" + cleaned_label)
 
-    def to_fs_str(self):
-        if self == self.UL_UNI_Sued:
-            return "Mensa"
-        elif self == self.UL_UNI_West:
-            return "West"
-        else:
-            return ""
-
 
 @dataclass
 class MealNutrition:
@@ -138,10 +130,10 @@ class Meal:
 class MaxmanagerRequest:
     func: str = "make_spl"
     locId: int = 1  # 1 is Mensa Süd
-    date: datetime = datetime.now()
+    date: date = date.today()
     lang: str = "de"
-    startThisWeek: datetime = get_monday()
-    startNextWeek: datetime = get_monday(1)
+    startThisWeek: date = get_monday()
+    startNextWeek: date = get_monday(1)
 
     def generate_request_dictionary(self):
         return {

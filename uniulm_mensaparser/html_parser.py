@@ -172,8 +172,12 @@ class HtmlMensaParser:
             nutrition = MealNutrition()
             if nutri_div:
                 co2_list = list(filter(lambda elem: isinstance(elem, NavigableString), nutri_div.contents))
-                co2_str = " ".join(co2_list).strip()
-                co2_str = re.sub(r"^.*Portion ", "", co2_str)
+                co2_full_str = " ".join(co2_list).strip()
+                matches = re.findall(r"[\d\.\,]*\sg", co2_full_str)
+                if len(matches) == 1:
+                    co2_str = matches[0]
+                elif len(matches) > 1:
+                    co2_str = matches[-1]
 
                 nutri_rows = nutri_div.findAll("tr")
                 nutri_rows = nutri_rows[1:]  # remove header row

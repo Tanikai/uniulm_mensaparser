@@ -11,10 +11,11 @@ import aiohttp
 from .utils import get_weekdates_this_and_next_week
 
 
-async def get_meals_for_canteens(canteens: Set[Canteen]) -> MultiCanteenPlan:
+async def get_meals_for_canteens(canteens: Set[Canteen], language: str) -> MultiCanteenPlan:
     """
 
     Args:
+        language: Language of canteen plan. Values: "de" | "en"
         canteens: Canteens to fetch meals from.
 
     Returns: Tuple of List of meals and List of fetched & parsed dates.
@@ -31,7 +32,7 @@ async def get_meals_for_canteens(canteens: Set[Canteen]) -> MultiCanteenPlan:
         tasks: List[asyncio.Task] = []
 
         async def get_meals_by_canteen(c: Canteen):
-            return c, await get_meals_per_canteen(session, dates, c)
+            return c, await get_meals_per_canteen(session, dates, c, language)
 
         for canteen in canteens:
             tasks.append(asyncio.create_task(get_meals_by_canteen(canteen)))
@@ -41,11 +42,11 @@ async def get_meals_for_canteens(canteens: Set[Canteen]) -> MultiCanteenPlan:
     return dict(results)
 
 
-async def get_meals_per_canteen(session, dates: List[datetime], canteen: Canteen) -> DailyCanteenMeals:
+async def get_meals_per_canteen(session, dates: List[datetime], canteen: Canteen, language: str) -> DailyCanteenMeals:
     tasks: List[asyncio.Task] = []
 
     async def get_meal_by_date(d: date):
-        return d, await get_meals_for_date(session, d, canteen)
+        return d, await get_meals_for_date(session, d, canteen, language)
 
     for plan_date in dates:
         tasks.append(asyncio.create_task(get_meal_by_date(plan_date)))
@@ -61,7 +62,7 @@ def format_meals(canteen_plans: MultiCanteenPlan, adapter_class: Type[PlanAdapte
 
 
 async def get_meals_for_date(
-        session: aiohttp.ClientSession, plan_date: date, canteen: Canteen
+        session: aiohttp.ClientSession, plan_date: date, canteen: Canteen, language: str
 ) -> List[Meal]:
     """
     This function is used to fetch and parse a single day from the specified canteen.
@@ -74,5 +75,5 @@ async def get_meals_for_date(
 
     """
     p = HtmlMensaParser()
-    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), plan_date)
+    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), plan_date, language)
     return p.parse_plan(source, plan_date, canteen)

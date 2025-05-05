@@ -131,7 +131,7 @@ class MaxmanagerRequest:
     func: str = "make_spl"
     locId: int = 1  # 1 is Mensa Süd
     date: date = date.today()
-    lang: str = "de"
+    lang: str = "de" # "de" | "en"
     startThisWeek: date = get_monday()
     startNextWeek: date = get_monday(1)
 

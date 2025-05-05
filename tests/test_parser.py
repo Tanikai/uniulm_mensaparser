@@ -16,6 +16,11 @@ class TestSpeiseplanWebsiteParser(TestCase):
         with open("parser_output.json", "w") as f:
             f.write(dumps(test, indent=2, ensure_ascii=False))
 
+    def test_get_plan_english(self):
+        test = api.get_plan_by_language("en")
+        with open("parser_output_en.json", "w") as f:
+            f.write(dumps(test, indent=2, ensure_ascii=False))
+
 
 class TestAsyncPlanFetch(unittest.IsolatedAsyncioTestCase):
     async def test_maxmanager_api(self):

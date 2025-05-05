@@ -154,7 +154,7 @@ class HtmlMensaParser:
             # Get meal type (vegetarian, vegan, ...) -> there can be multiple meal types per meal
             meal_types = []
             meal_type_icons = mealDiv.findAll(
-                "img", {"class": "icon", "title": re.compile("^(?:(?!BIO).)*$")}
+                "img", {"class": "icon"}
             )  # not bio
             if meal_type_icons is not None and not len(meal_type_icons) == 0:
                 meal_types = list(

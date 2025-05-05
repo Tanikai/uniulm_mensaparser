@@ -1,39 +1,8 @@
-from enum import Enum
+from enum import Enum, StrEnum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
 from datetime import date
 from typing import Dict, List
-
-legend = {
-    "S": "Schwein",
-    "R": "Rind",
-    "G": "Geflügel",
-    "1": "Farbstoff",
-    "2": "Konservierungsstoff",
-    "3": "Antioxidationsmittel",
-    "4": "Geschmacksverstärker",
-    "5": "geschwefelt",
-    "6": "geschwärzt",
-    "7": "gewachst",
-    "8": "Phosphat",
-    "9": "Süßungsmitteln",
-    "10": "Phenylalani",
-    "13": "Krebstieren",
-    "14": "Ei",
-    "22": "Erdnuss",
-    "23": "Soja",
-    "24": "Milch/Milchprodukte",
-    "25": "Schalenfrucht (alle Nussarten)",
-    "26": "Sellerie",
-    "27": "Senf",
-    "28": "Sesamsamen",
-    "29": "Schwefeldioxid",
-    "30": "Sulfit",
-    "31": "Lupine",
-    "32": "Weichtiere",
-    "34": "Gluten",
-    "35": "Fisch",
-}
 
 
 class Weekday(Enum):
@@ -98,6 +67,43 @@ class Canteen(Enum):
             raise NotImplementedError("Unknown Canteen:" + cleaned_label)
 
 
+class MealType(StrEnum):
+    NONE = "none"
+    VEGAN = "vegan"
+    VEGETARIAN = "vegetarian"
+    PORK = "pork"
+    BEEF = "beef"
+    POULTRY = "poultry"
+    FISH = "fish"
+    LAMB = "lamb"
+    GAME = "game"
+    BIO = "bio"
+
+    @staticmethod
+    def from_filename_str(filename: str):
+        cleaned = filename.lower().strip()
+        if cleaned == "van":
+            return MealType.VEGAN
+        elif cleaned == "veg":
+            return MealType.VEGETARIAN
+        elif cleaned == "s":  # Schwein
+            return MealType.PORK
+        elif cleaned == "r":  # Rind
+            return MealType.BEEF
+        elif cleaned == "g":  # Geflügel
+            return MealType.POULTRY
+        elif cleaned == "f":  # Fisch
+            return MealType.FISH
+        elif cleaned == "l":  # Lamm
+            return MealType.LAMB
+        elif cleaned == "w":  # Wildfleisch
+            return MealType.GAME
+        elif cleaned == "bio":
+            return MealType.BIO
+        else:
+            return MealType.NONE
+
+
 @dataclass
 class MealNutrition:
     calories: str = ""
@@ -121,7 +127,7 @@ class Meal:
     price_note: str = ""
     canteen: Canteen = Canteen.NONE
     allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
-    types: list[str] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
+    types: list[MealType] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
     co2: str = ""
     nutrition: MealNutrition = field(default_factory=MealNutrition)
 
@@ -131,7 +137,7 @@ class MaxmanagerRequest:
     func: str = "make_spl"
     locId: int = 1  # 1 is Mensa Süd
     date: date = date.today()
-    lang: str = "de" # "de" | "en"
+    lang: str = "de"  # "de" | "en"
     startThisWeek: date = get_monday()
     startNextWeek: date = get_monday(1)
 

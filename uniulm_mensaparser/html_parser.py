@@ -1,7 +1,7 @@
 import re
 
 from bs4 import BeautifulSoup, Tag, NavigableString
-from uniulm_mensaparser.models import Meal, Canteen, MealNutrition
+from uniulm_mensaparser.models import Meal, Canteen, MealNutrition, MealType
 from typing import List, Tuple
 from dataclasses import dataclass
 
@@ -158,14 +158,7 @@ class HtmlMensaParser:
             )  # not bio
             if meal_type_icons is not None and not len(meal_type_icons) == 0:
                 meal_types = list(
-                    map(lambda icon:
-                        icon.attrs["title"]
-                        if icon.attrs["title"] != ""
-
-                        # if meal titles are empty, use icon name as fallback
-                        else icon.attrs["src"]
-                        .removeprefix("assets/icons/")
-                        .removesuffix(".png"),
+                    map(lambda icon: MealType.from_filename_str(icon.attrs["src"].removeprefix("assets/icons/").removesuffix(".png")),
                         meal_type_icons)
                 )
 

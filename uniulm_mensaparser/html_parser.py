@@ -76,7 +76,7 @@ class HtmlMensaParser:
         meal_container: Tag = soup.div
 
         categories: List[SoupMealCategory] = self._split_categories(
-            meal_container.findChildren("div", recursive=False)
+            meal_container.find_all("div", recursive=False)
         )
         for cat in categories:
             meals += self._parse_category(cat)
@@ -139,7 +139,7 @@ class HtmlMensaParser:
             meal_block = mealDiv.find(
                 "div", {"class": "visible-xs-block"}
             )  # first block due to
-            fltl_divs = meal_block.findAll("div", {"class": "fltl"})
+            fltl_divs = meal_block.find_all("div", {"class": "fltl"})
 
             meal_info = fltl_divs[1]
             meal_name_parts = list(
@@ -153,7 +153,7 @@ class HtmlMensaParser:
 
             # Get meal type (vegetarian, vegan, ...) -> there can be multiple meal types per meal
             meal_types = []
-            meal_type_icons = mealDiv.findAll(
+            meal_type_icons = mealDiv.find_all(
                 "img", {"class": "icon"}
             )  # not bio
             if meal_type_icons is not None and not len(meal_type_icons) == 0:
@@ -180,7 +180,7 @@ class HtmlMensaParser:
                 elif len(matches) > 1:
                     co2_str = matches[-1]
 
-                nutri_rows = nutri_div.findAll("tr")
+                nutri_rows = nutri_div.find_all("tr")
                 nutri_rows = nutri_rows[1:]  # remove header row
                 nutrition = self._parse_meal_nutrition(nutri_rows)
 
@@ -240,23 +240,23 @@ class HtmlMensaParser:
 
         try:
             # energy
-            energy_cells = divs[0].findAll("td")
+            energy_cells = divs[0].find_all("td")
             energy_value = energy_cells[1].decode_contents().strip()
 
             # protein
-            protein_cells = divs[1].findAll("td")
+            protein_cells = divs[1].find_all("td")
             protein_value = protein_cells[1].decode_contents().strip()
 
             # fat & saturated fat
-            fat_cells = divs[2].findAll("td")
+            fat_cells = divs[2].find_all("td")
             fat_value, saturated_fat_value = _parse_nutrition_with_parentheses(fat_cells[1].decode_contents().strip())
 
             # carbohydrates & sugar
-            carb_cells = divs[3].findAll("td")
+            carb_cells = divs[3].find_all("td")
             carb_value, sugar_value = _parse_nutrition_with_parentheses(carb_cells[1].decode_contents().strip())
 
             # salt
-            salt_cells = divs[4].findAll("td")
+            salt_cells = divs[4].find_all("td")
             salt_value = salt_cells[1].decode_contents().strip()
 
             return MealNutrition(

@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum
+from enum import Enum
 from dataclasses import dataclass, field
 from .utils import date_format_iso, get_monday
 from datetime import date
@@ -67,7 +67,7 @@ class Canteen(Enum):
             raise NotImplementedError("Unknown Canteen:" + cleaned_label)
 
 
-class MealType(StrEnum):
+class MealType(str, Enum):
     NONE = "none"
     VEGAN = "vegan"
     VEGETARIAN = "vegetarian"
@@ -127,7 +127,7 @@ class Meal:
     price_note: str = ""
     canteen: Canteen = Canteen.NONE
     allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
-    types: list[MealType] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
+    types: List[MealType] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
     co2: str = ""
     nutrition: MealNutrition = field(default_factory=MealNutrition)
 

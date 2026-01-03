@@ -24,26 +24,24 @@ Python 3.8+.
 
 ### Integration into your own project
 
-This project is still under active development, so I haven't released a Module
-on PyPi yet. If you still want to use the current main branch in your project,
-you can install the Module with the following command:
+You can install the module from PyPI:
 
 ```sh
-uv add git+https://github.com/Tanikai/uniulm_mensaparser@main
+pip install uniulm-mensaparser
 ```
 
 After installing, you can use the parser like this:
 ```Python
-from uniulm_mensaparser import get_plan, Canteen, FsEtAdapter
+from uniulm_mensaparser import get_plan, Canteen, SimpleAdapter2
 
 # use get_plan() to get plans of all supported canteens
 plan = get_plan()
 print(plan)
 
 # specify which canteen plans you want to be parsed in a set
-my_canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_Nord}
+my_canteens = {Canteen.UL_UNI_Sued}
 # pass an adapter class for a different output format
-plan = get_plan(my_canteens, adapter_class=FsEtAdapter)
+plan = get_plan(my_canteens, adapter_class=SimpleAdapter2)
 print(plan)
 ```
 
@@ -61,9 +59,8 @@ uv sync
 
 ## Built With
 
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to
-  extract PDF links from the Studierendenwerk Ulm website
-- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) to scrape the tables of the canteen plan PDFs
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to parse the canteen plan from the Studierendenwerk Ulm website
+- [aiohttp](https://docs.aiohttp.org/) for asynchronous HTTP requests
 
 ## New MaxManager API endpoint
 

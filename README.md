@@ -57,6 +57,23 @@ cd uniulm_mensaparser
 uv sync
 ```
 
+## Development
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management and [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+
+To format and lint the code, run:
+
+```sh
+uvx ruff format .
+uvx ruff check . --fix
+```
+
+To run the tests:
+
+```sh
+uv run pytest
+```
+
 ## Built With
 
 - [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to parse the canteen plan from the Studierendenwerk Ulm website

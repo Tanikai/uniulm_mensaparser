@@ -1,12 +1,11 @@
 import re
-
-from bs4 import BeautifulSoup, Tag, NavigableString
-from uniulm_mensaparser.models import Meal, Canteen, MealNutrition, MealType
-from typing import List, Tuple
 from dataclasses import dataclass
-
 from datetime import date
+from typing import List, Tuple
 
+from bs4 import BeautifulSoup, NavigableString, Tag
+
+from uniulm_mensaparser.models import Canteen, Meal, MealNutrition, MealType
 from uniulm_mensaparser.utils import date_format_iso
 
 
@@ -50,7 +49,7 @@ def _pretty_print_meal(meal_category: str) -> str:
             formatted.append("und")
             continue
 
-        if all(letter.lower() == 'i' for letter in word):
+        if all(letter.lower() == "i" for letter in word):
             formatted.append(word.upper())
             continue
 
@@ -104,8 +103,8 @@ class HtmlMensaParser:
             meal_divs = []
 
             while (
-                    len(meal_categories) > 0
-                    and "gruppenkopf" not in meal_categories[0].attrs["class"]
+                len(meal_categories) > 0
+                and "gruppenkopf" not in meal_categories[0].attrs["class"]
             ):
                 meal_divs.append(meal_categories.pop(0))
 
@@ -127,7 +126,9 @@ class HtmlMensaParser:
         Returns:
 
         """
-        meal_category = str(category.headerDiv.find("div", {"class": "gruppenname"}).contents[0])
+        meal_category = str(
+            category.headerDiv.find("div", {"class": "gruppenname"}).contents[0]
+        )
         meals = []
 
         for mealDiv in category.mealDivs:
@@ -151,20 +152,22 @@ class HtmlMensaParser:
             # Clean up and concatenate partial strings of meal name
             meal_name = build_meal_name(meal_name_parts)
 
-            # Get meal type (vegetarian, vegan, ...) -> there can be multiple meal types per meal
+            # Get meal type (vegetarian, vegan, ...) -> there can be
+            # multiple meal types per meal
             meal_types = []
-            meal_type_icons = mealDiv.find_all(
-                "img", {"class": "icon"}
-            )  # not bio
-            if meal_type_icons is not None and not len(meal_type_icons) == 0:
-                meal_types = list(
-                    map(lambda icon: MealType.from_filename_str(icon.attrs["src"].removeprefix("assets/icons/").removesuffix(".png")),
-                        meal_type_icons)
-                )
+            meal_type_icons = mealDiv.find_all("img", {"class": "icon"})  # not bio
+            if meal_type_icons is not None and len(meal_type_icons) != 0:
+                meal_types = [MealType.from_filename_str(
+                            icon.attrs["src"]
+                            .removeprefix("assets/icons/")
+                            .removesuffix(".png")
+                        ) for icon in meal_type_icons]
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text
-            price_students, price_emp, price_others, price_note = self._parse_prices(price_text)
+            price_students, price_emp, price_others, price_note = self._parse_prices(
+                price_text
+            )
 
             # Get co2 and nutrition information
             nutri_div = mealDiv.find("div", {"class": "azn"})
@@ -172,7 +175,12 @@ class HtmlMensaParser:
             co2_str = ""
             nutrition = MealNutrition()
             if nutri_div:
-                co2_list = list(filter(lambda elem: isinstance(elem, NavigableString), nutri_div.contents))
+                co2_list = list(
+                    filter(
+                        lambda elem: isinstance(elem, NavigableString),
+                        nutri_div.contents,
+                    )
+                )
                 co2_full_str = " ".join(co2_list).strip()
                 matches = re.findall(r"[\d\.\,]*\sg", co2_full_str)
                 if len(matches) == 1:
@@ -216,25 +224,26 @@ class HtmlMensaParser:
         if "(" in price:
             left_parentheses_index = price.find("(")
             right_parentheses_index = price.find(")")
-            price_note = price[left_parentheses_index + 1:right_parentheses_index]
-            price = price[right_parentheses_index + 1:]
+            price_note = price[left_parentheses_index + 1 : right_parentheses_index]
+            price = price[right_parentheses_index + 1 :]
 
         cleaned: str = price.replace("\xa0", " ").strip(" €&nbsp")
 
-        split = list(map(lambda p: p.strip() + " €", cleaned.split("|")))
+        split = [p.strip() + " €" for p in cleaned.split("|")]
         if len(split) != 3:
             return "n/a", "n/a", "n/a", price_note
         return split[0], split[1], split[2], price_note
 
     @staticmethod
     def _parse_meal_nutrition(divs) -> MealNutrition:
-
         def _parse_nutrition_with_parentheses(div_text: str) -> Tuple[str, str]:
             gram_index = div_text.find("g")
-            first_value = div_text[:gram_index + 1]
+            first_value = div_text[: gram_index + 1]
             left_parentheses_index = div_text.find("(")
             right_parentheses_index = div_text.find(")")
-            parentheses_value = div_text[left_parentheses_index + 1:right_parentheses_index]
+            parentheses_value = div_text[
+                left_parentheses_index + 1 : right_parentheses_index
+            ]
 
             return first_value, parentheses_value
 
@@ -249,11 +258,15 @@ class HtmlMensaParser:
 
             # fat & saturated fat
             fat_cells = divs[2].find_all("td")
-            fat_value, saturated_fat_value = _parse_nutrition_with_parentheses(fat_cells[1].decode_contents().strip())
+            fat_value, saturated_fat_value = _parse_nutrition_with_parentheses(
+                fat_cells[1].decode_contents().strip()
+            )
 
             # carbohydrates & sugar
             carb_cells = divs[3].find_all("td")
-            carb_value, sugar_value = _parse_nutrition_with_parentheses(carb_cells[1].decode_contents().strip())
+            carb_value, sugar_value = _parse_nutrition_with_parentheses(
+                carb_cells[1].decode_contents().strip()
+            )
 
             # salt
             salt_cells = divs[4].find_all("td")
@@ -269,6 +282,6 @@ class HtmlMensaParser:
                 salt=salt_value,
             )
 
-        except Exception as e:
+        except Exception:
             # old html format does not have nutrition list
             return MealNutrition()

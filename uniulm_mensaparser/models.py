@@ -1,8 +1,9 @@
-from enum import Enum
 from dataclasses import dataclass, field
-from .utils import date_format_iso, get_monday
 from datetime import date
+from enum import Enum
 from typing import Dict, List
+
+from .utils import date_format_iso, get_monday
 
 
 class Weekday(Enum):
@@ -82,26 +83,18 @@ class MealType(str, Enum):
     @staticmethod
     def from_filename_str(filename: str):
         cleaned = filename.lower().strip()
-        if cleaned == "van":
-            return MealType.VEGAN
-        elif cleaned == "veg":
-            return MealType.VEGETARIAN
-        elif cleaned == "s":  # Schwein
-            return MealType.PORK
-        elif cleaned == "r":  # Rind
-            return MealType.BEEF
-        elif cleaned == "g":  # Geflügel
-            return MealType.POULTRY
-        elif cleaned == "f":  # Fisch
-            return MealType.FISH
-        elif cleaned == "l":  # Lamm
-            return MealType.LAMB
-        elif cleaned == "w":  # Wildfleisch
-            return MealType.GAME
-        elif cleaned == "bio":
-            return MealType.BIO
-        else:
-            return MealType.NONE
+        mapping = {
+            "van": MealType.VEGAN,
+            "veg": MealType.VEGETARIAN,
+            "s": MealType.PORK,
+            "r": MealType.BEEF,
+            "g": MealType.POULTRY,
+            "f": MealType.FISH,
+            "l": MealType.LAMB,
+            "w": MealType.GAME,
+            "bio": MealType.BIO,
+        }
+        return mapping.get(cleaned, MealType.NONE)
 
 
 @dataclass
@@ -120,14 +113,18 @@ class Meal:
     name: str = ""
     category: str = ""
     date: str = ""
-    week_number: int = -1  # can be derived from the date but included for easier use of data
+    week_number: int = (
+        -1
+    )  # can be derived from the date but included for easier use of data
     price_students: str = ""
     price_employees: str = ""
     price_others: str = ""
     price_note: str = ""
     canteen: Canteen = Canteen.NONE
     allergy_ids: set = field(default_factory=set)  # e.g. 26, 34W, 27
-    types: List[MealType] = field(default_factory=list)  # vegetarian / vegan / etc. -> parsed from used icon
+    types: List[MealType] = field(
+        default_factory=list
+    )  # vegetarian / vegan / etc. -> parsed from used icon
     co2: str = ""
     nutrition: MealNutrition = field(default_factory=MealNutrition)
 

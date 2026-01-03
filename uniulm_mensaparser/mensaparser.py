@@ -1,17 +1,19 @@
 import asyncio
+from datetime import date, datetime
+from typing import List, Set, Tuple, Type
+
+import aiohttp
 
 from .adapter import PlanAdapter
 from .html_parser import HtmlMensaParser
-from .models import Canteen, Meal, MultiCanteenPlan, DailyCanteenMeals
+from .models import Canteen, DailyCanteenMeals, Meal, MultiCanteenPlan
 from .studierendenwerk_scraper import get_maxmanager_website
-from typing import List, Set, Type, Tuple
-from datetime import datetime, date
-import aiohttp
-
 from .utils import get_weekdates_this_and_next_week
 
 
-async def get_meals_for_canteens(canteens: Set[Canteen], language: str) -> MultiCanteenPlan:
+async def get_meals_for_canteens(
+    canteens: Set[Canteen], language: str
+) -> MultiCanteenPlan:
     """
 
     Args:
@@ -42,7 +44,9 @@ async def get_meals_for_canteens(canteens: Set[Canteen], language: str) -> Multi
     return dict(results)
 
 
-async def get_meals_per_canteen(session, dates: List[datetime], canteen: Canteen, language: str) -> DailyCanteenMeals:
+async def get_meals_per_canteen(
+    session, dates: List[datetime], canteen: Canteen, language: str
+) -> DailyCanteenMeals:
     tasks: List[asyncio.Task] = []
 
     async def get_meal_by_date(d: date):
@@ -62,7 +66,7 @@ def format_meals(canteen_plans: MultiCanteenPlan, adapter_class: Type[PlanAdapte
 
 
 async def get_meals_for_date(
-        session: aiohttp.ClientSession, plan_date: date, canteen: Canteen, language: str
+    session: aiohttp.ClientSession, plan_date: date, canteen: Canteen, language: str
 ) -> List[Meal]:
     """
     This function is used to fetch and parse a single day from the specified canteen.
@@ -75,5 +79,7 @@ async def get_meals_for_date(
 
     """
     p = HtmlMensaParser()
-    source = await get_maxmanager_website(session, canteen.get_maxmanager_id(), plan_date, language)
+    source = await get_maxmanager_website(
+        session, canteen.get_maxmanager_id(), plan_date, language
+    )
     return p.parse_plan(source, plan_date, canteen)

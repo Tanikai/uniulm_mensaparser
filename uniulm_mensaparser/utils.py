@@ -1,6 +1,7 @@
-from datetime import datetime, date, timedelta
-import aiohttp
+from datetime import date, datetime, timedelta
 from typing import List
+
+import aiohttp
 
 
 def get_monday(week_offset=0) -> date:

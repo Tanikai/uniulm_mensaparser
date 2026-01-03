@@ -1,5 +1,6 @@
-from .models import Meal, MultiCanteenPlan
 from abc import abstractmethod
+
+from .models import Meal, MultiCanteenPlan
 from .utils import date_format_iso
 
 

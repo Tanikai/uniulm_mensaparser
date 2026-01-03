@@ -1,14 +1,13 @@
 import unittest
+from datetime import date
+from json import dumps
+from pathlib import Path
 from unittest import TestCase
 
 import aiohttp
 
 from uniulm_mensaparser import api
-from json import dumps
-
 from uniulm_mensaparser.studierendenwerk_scraper import get_maxmanager_website
-from datetime import date
-from pathlib import Path
 
 
 class TestSpeiseplanWebsiteParser(TestCase):
@@ -31,5 +30,7 @@ class TestAsyncPlanFetch(unittest.IsolatedAsyncioTestCase):
     async def test_maxmanager_api(self):
         async with aiohttp.ClientSession() as session:
             # Removed file writing in test to avoid directory issues
-            test = await get_maxmanager_website(session, loc_id=1, plan_date=date(2025, 1, 7))
+            test = await get_maxmanager_website(
+                session, loc_id=1, plan_date=date(2025, 1, 7)
+            )
             self.assertIsNotNone(test)

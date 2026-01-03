@@ -1,6 +1,8 @@
-from .models import MaxmanagerRequest
 from datetime import date
+
 import aiohttp
+
+from .models import MaxmanagerRequest
 
 """
 This module is used to get the links to the PDF files.
@@ -11,7 +13,10 @@ MAXMANAGER_URL = "https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc
 
 
 async def get_maxmanager_website(
-        session: aiohttp.ClientSession, loc_id: int = 1, plan_date: date = date.today(), lang: str = "de"
+    session: aiohttp.ClientSession,
+    loc_id: int = 1,
+    plan_date: date = None,
+    lang: str = "de",
 ) -> str:
     """
     Returns the HTML canteen plan for the selected canteen and date.
@@ -21,10 +26,13 @@ async def get_maxmanager_website(
         loc_id:
             1: Universität Süd
             2: Universität West
-        plan_date: Date for plan
+        plan_date: Date for plan. Defaults to today.
 
     Returns: HTML source code of date
     """
+
+    if plan_date is None:
+        plan_date = date.today()
 
     form_data = MaxmanagerRequest()
     form_data.locId = loc_id

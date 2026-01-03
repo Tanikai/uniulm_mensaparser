@@ -38,6 +38,14 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["uniulm_mensaparser"]
 
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4", "SIM"]
+ignore = []
+
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",

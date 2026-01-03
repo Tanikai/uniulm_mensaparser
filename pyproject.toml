@@ -1,6 +1,6 @@
 [project]
 name = "uniulm-mensaparser"
-version = "1.0.0"
+version = "1.0.1"
 description = "A parser for the canteen / Mensa plans at Ulm University"
 authors = [
     { name = "Tanikai", email = "kai@anter.dev" }

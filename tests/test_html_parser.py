@@ -1,6 +1,6 @@
 from unittest import TestCase
 from uniulm_mensaparser.html_parser import HtmlMensaParser
-from uniulm_mensaparser.models import Canteen, Meal
+from uniulm_mensaparser.models import Canteen, Meal, MealType
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class TestHtmlParser(TestCase):
             parser = HtmlMensaParser()
             plan = parser.parse_plan(f.read(), datetime(2023, 12, 19), Canteen.UL_UNI_Sued)
             meal: Meal = next(filter(lambda p: p.category == "Fleisch und Fisch", plan))
-            self.assertListEqual(meal.types, ["Fisch", "Geflügel"], "meal has to contain both categories")
+            self.assertListEqual(meal.types, [MealType.FISH, MealType.POULTRY], "meal has to contain both categories")
 
     def test_extra_category(self):
         with open("new-html/wiener.html") as f:

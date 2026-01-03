@@ -20,7 +20,7 @@ your local machine for development and testing purposes.
 ### Prerequisites
 
 This project is tested and deployed with Python 3.9+. The dependencies require
-Python 3.7+.
+Python 3.8+.
 
 ### Integration into your own project
 
@@ -29,7 +29,7 @@ on PyPi yet. If you still want to use the current main branch in your project,
 you can install the Module with the following command:
 
 ```sh
-pip install git+https://github.com/Tanikai/uniulm_mensaparser@main
+uv add git+https://github.com/Tanikai/uniulm_mensaparser@main
 ```
 
 After installing, you can use the parser like this:
@@ -56,7 +56,7 @@ Python modules:
 ```sh
 git clone https://github.com/Tanikai/uniulm_mensaparser.git
 cd uniulm_mensaparser
-pip install -r requirements.txt
+uv sync
 ```
 
 ## Built With

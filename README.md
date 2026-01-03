@@ -6,11 +6,8 @@ Ulm University that are provided on the
 You can see the data in action on the
 [**UUlm Mensaplan website**](https://mensaplan.anter.dev/).
 
-The parsed data is provided via a REST API as well:
+For an example of parsed data, see the following REST API endpoint:
 [https://uulm.anter.dev/api/v1/canteens/all](https://uulm.anter.dev/api/v1/canteens/all)
-
-The source code for the REST API is available at
-[Tanikai/uniulm_mensa_api](https://github.com/Tanikai/uniulm_mensa_api).
 
 ## Getting Started
 
@@ -46,7 +43,9 @@ plan = get_plan(my_canteens, adapter_class=SimpleAdapter2)
 print(plan)
 ```
 
-### Installing for further development
+## Development
+
+### Installation
 
 If you want to extend the functionality of this library (e.g. implementing a new
 Adapter or PDF parser), you can clone this repository and install the required
@@ -58,7 +57,7 @@ cd uniulm_mensaparser
 uv sync
 ```
 
-## Development
+### Tooling
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency
 management, [ruff](https://docs.astral.sh/ruff/) for linting and formatting,
@@ -83,26 +82,26 @@ To run the tests:
 uv run pytest
 ```
 
+### MaxManager API endpoint
+
+The following curl command sends a request to the new endpoint. Remember to
+replace the date with the current date.
+
+```bash
+curl -X POST 'https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc.php?func=make_spl&locId=1&date=2023-07-20&lang=de&startThisWeek=2023-07-17&startNextWeek=2023-07-24'
+```
+
 ## Built With
 
 - [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to parse the
   canteen plan from the Studierendenwerk Ulm website
 - [aiohttp](https://docs.aiohttp.org/) for asynchronous HTTP requests
 
-## New MaxManager API endpoint
-
-Since 2023, there is a new API endpoint for some canteens. This allows us to
-parse the returned HTML, instead of the PDF file. The following curl command
-sends a request to the new endpoint. Don't forget to replace the date with the
-current date.
-
-```bash
-curl -X POST 'https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc.php?func=make_spl&locId=1&date=2023-07-20&lang=de&startThisWeek=2023-07-17&startNextWeek=2023-07-24'
-```
-
 ## Authors
 
-- **Kai Anter** - [GitHub](https://github.com/Tanikai) - [Mastodon](https://hachyderm.io/@Tanikai)
+- Kai Anter:
+  [GitHub](https://github.com/Tanikai),
+  [Mastodon](https://hachyderm.io/@Tanikai)
 
 ## License
 

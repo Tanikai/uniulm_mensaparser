@@ -20,7 +20,7 @@ def remove_allergens(line: str) -> str:
     return re.sub(parentheses_re, "", line)
 
 
-def build_meal_name(meal_lines: [str]) -> str:
+def build_meal_name(meal_lines: List[str]) -> str:
     meal_name = " ".join(meal_lines)
 
     meal_name = remove_allergens(meal_name)
@@ -72,7 +72,9 @@ class HtmlMensaParser:
         if no_meals is not None:
             return []
 
-        meal_container: Tag = soup.div
+        meal_container = soup.div
+        if meal_container is None:
+            return []
 
         categories: List[SoupMealCategory] = self._split_categories(
             meal_container.find_all("div", recursive=False)
@@ -133,7 +135,11 @@ class HtmlMensaParser:
 
         for mealDiv in category.mealDivs:
             # Parse allergy information
-            allergy = mealDiv.attrs["lang"]
+            allergy = mealDiv.attrs.get("lang")
+            if isinstance(allergy, list):
+                allergy = ",".join(allergy)
+            if allergy is None:
+                allergy = ""
             allergy_ids = set(allergy.split(","))
 
             # Get meal string
@@ -157,11 +163,16 @@ class HtmlMensaParser:
             meal_types = []
             meal_type_icons = mealDiv.find_all("img", {"class": "icon"})  # not bio
             if meal_type_icons is not None and len(meal_type_icons) != 0:
-                meal_types = [MealType.from_filename_str(
-                            icon.attrs["src"]
-                            .removeprefix("assets/icons/")
-                            .removesuffix(".png")
-                        ) for icon in meal_type_icons]
+                for icon in meal_type_icons:
+                    src = icon.attrs.get("src")
+                    if isinstance(src, list):
+                        src = "".join(src)
+                    if src:
+                        meal_types.append(
+                            MealType.from_filename_str(
+                                src.removeprefix("assets/icons/").removesuffix(".png")
+                            )
+                        )
 
             price_div = meal_block.find("span", {"class": "preisgramm"}).parent
             price_text = price_div.text

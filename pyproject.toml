@@ -49,4 +49,5 @@ ignore = []
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "ty>=0.0.8",
 ]

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Set, Type
+from typing import Optional, Set, Type
 
 from .adapter import PlanAdapter, SimpleAdapter2
 from .mensaparser import format_meals, get_meals_for_canteens
@@ -11,7 +11,8 @@ Library API
 
 
 def get_plan(
-    canteens: Set[Canteen] = None, adapter_class: Type[PlanAdapter] = None
+    canteens: Optional[Set[Canteen]] = None,
+    adapter_class: Optional[Type[PlanAdapter]] = None,
 ) -> dict:
     """
     Returns the Ulm University canteen plan for this and next week.
@@ -27,8 +28,8 @@ def get_plan(
 
 def get_plan_by_language(
     language: str = "de",
-    canteens: Set[Canteen] = None,
-    adapter_class: Type[PlanAdapter] = None,
+    canteens: Optional[Set[Canteen]] = None,
+    adapter_class: Optional[Type[PlanAdapter]] = None,
 ) -> dict:
     """
     Returns the Ulm University canteen plan for this and next week in the
@@ -53,7 +54,7 @@ def get_plan_by_language(
 
 
 def get_unformatted_plan(
-    canteens: Set[Canteen] = None, language: str = "de"
+    canteens: Optional[Set[Canteen]] = None, language: str = "de"
 ) -> MultiCanteenPlan:
     if canteens is None:
         canteens = {Canteen.UL_UNI_Sued, Canteen.UL_UNI_West}

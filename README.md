@@ -31,6 +31,7 @@ pip install uniulm-mensaparser
 ```
 
 After installing, you can use the parser like this:
+
 ```Python
 from uniulm_mensaparser import get_plan, Canteen, SimpleAdapter2
 
@@ -59,13 +60,21 @@ uv sync
 
 ## Development
 
-This project uses [uv](https://docs.astral.sh/uv/) for dependency management and [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+This project uses [uv](https://docs.astral.sh/uv/) for dependency
+management, [ruff](https://docs.astral.sh/ruff/) for linting and formatting,
+and [ty](https://github.com/astral-sh/ty) for type checking.
 
 To format and lint the code, run:
 
 ```sh
 uvx ruff format .
 uvx ruff check . --fix
+```
+
+To run the type checks:
+
+```sh
+uv run ty check
 ```
 
 To run the tests:
@@ -76,7 +85,8 @@ uv run pytest
 
 ## Built With
 
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to parse the canteen plan from the Studierendenwerk Ulm website
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) to parse the
+  canteen plan from the Studierendenwerk Ulm website
 - [aiohttp](https://docs.aiohttp.org/) for asynchronous HTTP requests
 
 ## New MaxManager API endpoint

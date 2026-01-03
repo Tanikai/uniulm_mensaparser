@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 import aiohttp
 
@@ -15,7 +16,7 @@ MAXMANAGER_URL = "https://sw-ulm-spl51.maxmanager.xyz/inc/ajax-php_konnektor.inc
 async def get_maxmanager_website(
     session: aiohttp.ClientSession,
     loc_id: int = 1,
-    plan_date: date = None,
+    plan_date: Optional[date] = None,
     lang: str = "de",
 ) -> str:
     """

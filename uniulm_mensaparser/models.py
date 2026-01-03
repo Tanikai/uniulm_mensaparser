@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
@@ -133,10 +134,10 @@ class Meal:
 class MaxmanagerRequest:
     func: str = "make_spl"
     locId: int = 1  # 1 is Mensa Süd
-    date: date = date.today()
+    date: datetime.date = field(default_factory=datetime.date.today)
     lang: str = "de"  # "de" | "en"
-    startThisWeek: date = get_monday()
-    startNextWeek: date = get_monday(1)
+    startThisWeek: datetime.date = field(default_factory=get_monday)
+    startNextWeek: datetime.date = field(default_factory=lambda: get_monday(1))
 
     def generate_request_dictionary(self):
         return {

@@ -72,13 +72,19 @@ class HtmlMensaParser:
         if no_meals is not None:
             return []
 
-        meal_container = soup.div
+        # The MaxManager endpoint sometimes returns just the inner container div,
+        # but depending on upstream changes it may also be wrapped in additional
+        # markup. Be defensive and anchor on the container that actually contains
+        # the top-level `div.row` entries.
+        meal_container = soup.find("div", {"class": "container-fluid"}) or soup.div
         if meal_container is None:
             return []
 
-        categories: List[SoupMealCategory] = self._split_categories(
-            meal_container.find_all("div", recursive=False)
-        )
+        top_level_divs = meal_container.find_all("div", recursive=False)
+        if not top_level_divs:
+            return []
+
+        categories: List[SoupMealCategory] = self._split_categories(top_level_divs)
         for cat in categories:
             meals += self._parse_category(cat)
 
@@ -100,13 +106,21 @@ class HtmlMensaParser:
 
         while len(meal_categories) > 0:
             category_div = meal_categories.pop(0)
-            if "gruppenkopf" not in category_div.attrs["class"]:
+            class_attr = category_div.attrs.get("class", [])
+            if isinstance(class_attr, str):
+                class_attr = class_attr.split()
+            if "gruppenkopf" not in class_attr:
                 raise Exception("invalid input")
             meal_divs = []
 
             while (
                 len(meal_categories) > 0
-                and "gruppenkopf" not in meal_categories[0].attrs["class"]
+                and "gruppenkopf"
+                not in (
+                    meal_categories[0].attrs.get("class", [])
+                    if not isinstance(meal_categories[0].attrs.get("class", []), str)
+                    else meal_categories[0].attrs.get("class", "").split()
+                )
             ):
                 meal_divs.append(meal_categories.pop(0))
 
